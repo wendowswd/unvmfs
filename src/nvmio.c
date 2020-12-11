@@ -35,7 +35,8 @@ void init_env(void)
 	char filename[256];
 	unsigned long long *init_num = NULL;
 	
-	unvmfs_path = getenv("UNVMFS_PATH");
+	//unvmfs_path = getenv("UNVMFS_PATH");
+	unvmfs_path = "/mnt";
 	if (__glibc_unlikely(unvmfs_path == NULL)) {
 	  handle_error("unvmfs_path is NULL.");
 	}
