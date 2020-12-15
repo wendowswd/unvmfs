@@ -31,6 +31,8 @@ u64 get_radixtree_node(radixtree_t *root, u64 index, radixtree_type_t type)
     int id;
     radixtree_node_t *node = NULL;
 
+    UNVMFS_DEBUG("get_radixtree_node start");
+
     if (root == NULL) {
         return OFFSET_NULL;
     }
@@ -51,6 +53,9 @@ u64 get_radixtree_node(radixtree_t *root, u64 index, radixtree_type_t type)
     }
 
     id = idx & RADIXTREE_IDX_MASK;
+
+    UNVMFS_DEBUG("get_radixtree_node success");
+    
     return node->entries[id];
 }
 
@@ -61,6 +66,8 @@ void set_radixtree_node(radixtree_t *root, u64 value, u64 index, radixtree_type_
     int id;
     radixtree_node_t *node = NULL;
     u64 new_node;
+
+    UNVMFS_DEBUG("set_radixtree_node start");
 
     if (root == NULL || node == NULL) {
         return;
@@ -85,7 +92,8 @@ void set_radixtree_node(radixtree_t *root, u64 value, u64 index, radixtree_type_
     if (!__sync_bool_compare_and_swap(&node->entries[id], OFFSET_NULL, value)) {
         free_unvmfs_inode(nvm_off2addr(value));
     }
-    
+
+    UNVMFS_DEBUG("set_radixtree_node success");
     return;
 }
 
