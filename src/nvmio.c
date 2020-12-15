@@ -23,9 +23,9 @@
 
 extern void kernel_gc_thread_init(void);
 
-static char *unvmfs_path = NULL;
-static char *unvmfs_file = "unvmfs";
-void *nvm_base_addr = NULL;
+static char *g_unvmfs_path = NULL;
+static char *g_unvmfs_file = "unvmfs_map";
+void *g_nvm_base_addr = NULL;
 
 bool process_initialized = false;
 
@@ -35,34 +35,34 @@ void init_env(void)
 	char filename[256];
 	unsigned long long *init_num = NULL;
 	
-	//unvmfs_path = getenv("UNVMFS_PATH");
-	unvmfs_path = "/mnt";
-	if (__glibc_unlikely(unvmfs_path == NULL)) {
-	  handle_error("unvmfs_path is NULL.");
+	//g_unvmfs_path = getenv("UVNMFS_PATH");
+	g_unvmfs_path = "/home/wenduo";
+	if (__glibc_unlikely(g_unvmfs_path == NULL)) {
+	  handle_error("g_unvmfs_path is NULL.");
 	}
 
-	sprintf(filename, "%s/%s", unvmfs_path, unvmfs_file);
+	sprintf(filename, "%s/%s", g_unvmfs_path, g_unvmfs_file);
 	fd = open(filename, O_CREAT | O_RDWR);
 	if (fd < 0) {
-		handle_error("open unvmfs_path failed.");
+		handle_error("open g_unvmfs_path failed.");
 	}
 	s = posix_fallocate(fd, 0, NVM_MMAP_SIZE);
     if (__glibc_unlikely(s != 0)) {
       handle_error("fallocate");
     }
-	nvm_base_addr = mmap(NULL, NVM_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
-	if (__glibc_unlikely(nvm_base_addr == NULL)) {
-		  handle_error("nvm_base_addr is NULL.");
+	g_nvm_base_addr = mmap(NULL, NVM_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
+	if (__glibc_unlikely(g_nvm_base_addr == NULL)) {
+		  handle_error("g_nvm_base_addr is NULL.");
 	}
 
-	init_num = nvm_base_addr;
+	init_num = g_nvm_base_addr;
 	if (__sync_bool_compare_and_swap(init_num, 0ULL, SB_INIT_NUMBER)) {
         kernel_page_list_init();
         
         kernel_inode_list_init();
         kernel_radixtree_list_init();
 
-        kernel_superblock_init(nvm_base_addr, unvmfs_path);
+        kernel_superblock_init(g_nvm_base_addr, g_unvmfs_path);
 
         kernel_gc_thread_init();
 	}

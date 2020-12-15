@@ -13,7 +13,7 @@
 		exit(EXIT_FAILURE); \
 	} while (0)
 
-#define FILE_PATH "/mnt/pmem/testfile"
+#define FILE_PATH "/home/wenduo/testfile"
 #define FILE_SIZE (1UL << 26)
 #define BUF_SIZE (1UL << 10)
 
