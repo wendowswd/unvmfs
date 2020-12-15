@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -W -Wall -O3
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-TARGET = unvmfs.a
+TARGET = libunvmfs.a
 
 #CFLAGS += -D_UNVMFS_DEBUG
 #CFLAGS += -D_UNVMFS_TIME

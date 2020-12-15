@@ -1,7 +1,7 @@
 CC = gcc
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
 TARGET = helloworld
-LIBS = -lunvmfs -lpthread -lpmem
+LIBS = -lunvmfs -lpthread
 LIBPATH = -L../../src
 INCLUDE = -I../../include
 CFLAGS = -g $(INCLUDE)
