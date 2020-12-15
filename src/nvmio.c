@@ -21,6 +21,7 @@
 #include "allocator.h"
 #include "debug.h"
 
+extern inline int get_cpu_nums(void);
 extern void kernel_gc_thread_init(void);
 
 static char *g_unvmfs_path = NULL;
@@ -28,6 +29,7 @@ static char *g_unvmfs_file = "unvmfs_map";
 void *g_nvm_base_addr = NULL;
 
 bool process_initialized = false;
+extern u32 g_cpu_nums;
 
 void init_env(void)
 {
@@ -59,6 +61,12 @@ void init_env(void)
 		  handle_error("g_nvm_base_addr is NULL.");
 	}
     UNVMFS_DEBUG("mmap g_unvmfs_file success");
+
+    g_cpu_nums = get_cpu_nums();
+    if (__glibc_unlikely(g_cpu_nums <= 0)) {
+		  handle_error("g_cpu_nums is NULL.");
+	}
+    UNVMFS_DEBUG("get g_cpu_nums success");
     
 	init_num = g_nvm_base_addr;
 	if (__sync_bool_compare_and_swap(init_num, 0ULL, SB_INIT_NUMBER)) {

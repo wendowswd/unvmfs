@@ -11,13 +11,7 @@
 #include "radixtree.h"
 #include "types.h"
 
-/* u64 current_cpu = 0;
-static inline int get_cpuid()
-{
-    u64 cpuid = __sync_fetch_and_add(&current_cpu, 1);
-
-    return cpuid % CPU_NUMS;
-} */
+extern u32 g_cpu_nums;
 
 void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
 {
@@ -25,7 +19,7 @@ void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
     addr->s_blocksize = PAGE_SIZE;
     addr->num_blocks = NVM_MMAP_SIZE / addr->s_blocksize;
     addr->free_num_pages = NVM_FREE_NUM_PAGES;
-    addr->cpu_nums = get_cpu_nums();
+    addr->cpu_nums = g_cpu_nums;
 
     INIT_LIST_HEAD(&addr->s_list);
     pthread_rwlock_init(&addr->rwlockp, NULL);
@@ -38,7 +32,7 @@ void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
 void kernel_page_list_init(void)
 {
     u64 i, j;
-    u64 cpu_nums = get_cpu_nums();
+    u64 cpu_nums = g_cpu_nums;
     u64 free_num_pages = NVM_FREE_NUM_PAGES;
     char *page_list_base_addr = get_page_list_base_addr();
     char *free_space_base_addr = get_free_space_base_addr();
@@ -85,7 +79,7 @@ void kernel_page_list_init(void)
 void kernel_inode_list_init(void)
 {
     int i;
-    int cpu_nums = get_cpu_nums();
+    int cpu_nums = g_cpu_nums;
     allocator_list_t *alloc_list = NULL;
 
     for (i = 0; i < cpu_nums; ++i) {
@@ -100,7 +94,7 @@ void kernel_inode_list_init(void)
 void kernel_radixtree_list_init(void)
 {
     int i;
-    int cpu_nums = get_cpu_nums();
+    int cpu_nums = g_cpu_nums;
     allocator_list_t *alloc_list = NULL;
 
     for (i = 0; i < cpu_nums; ++i) {

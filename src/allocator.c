@@ -27,6 +27,8 @@ void init_page_list(void *addr)
     }
 }*/
 
+extern inline int get_cpuid(void);
+
 void init_allocator_list(allocator_list_t *alloc_list)
 {
     alloc_list->head = OFFSET_NULL;

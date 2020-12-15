@@ -94,18 +94,6 @@ static inline u64 get_curr_time(void)
     return curr.tv_sec * NSECS_PER_SEC + curr.tv_nsec;
 }
 
-static inline int get_cpuid(void)
-{
-    // todo
-    return -1;
-    // return sched_getcpu();
-}
-
-static inline int get_cpu_nums(void)
-{
-    return sysconf(_SC_NPROCESSORS_CONF);
-}
-
 static inline void *get_superblock(void)
 {
     return g_nvm_base_addr;
