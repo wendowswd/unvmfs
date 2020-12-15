@@ -31,6 +31,8 @@ void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
     pthread_rwlock_init(&addr->rwlockp, NULL);
     memcpy(addr->s_volume_name, unvmfs_path, strlen(unvmfs_path));
     init_radixtree_root(&addr->hash_root, RADIXTREE_INODE);
+
+    UNVMFS_DEBUG("kernel_superblock_init success");
 }
 
 void kernel_page_list_init(void)
@@ -76,6 +78,8 @@ void kernel_page_list_init(void)
         pthread_mutex_init(&local_page_list->mutex, NULL);
         
     }
+
+    UNVMFS_DEBUG("kernel_page_list_init success");
 }
 
 void kernel_inode_list_init(void)
@@ -89,6 +93,8 @@ void kernel_inode_list_init(void)
         init_allocator_list(alloc_list);
         fill_unvmfs_inode_list(alloc_list);
     }
+
+    UNVMFS_DEBUG("kernel_inode_list_init success");
 }
 
 void kernel_radixtree_list_init(void)
@@ -102,4 +108,6 @@ void kernel_radixtree_list_init(void)
         init_allocator_list(alloc_list);
         fill_radixtree_node_list(alloc_list);
     }
+
+    UNVMFS_DEBUG("kernel_radixtree_list_init success");
 }

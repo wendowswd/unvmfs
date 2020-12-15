@@ -12,6 +12,7 @@
 #include "radixtree.h"
 #include "inode.h"
 #include "types.h"
+#include "debug.h"
 
 extern void *g_nvm_base_addr;
 

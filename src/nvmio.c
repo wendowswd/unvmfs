@@ -40,21 +40,26 @@ void init_env(void)
 	if (__glibc_unlikely(g_unvmfs_path == NULL)) {
 	  handle_error("g_unvmfs_path is NULL.");
 	}
+    UNVMFS_DEBUG("get g_unvmfs_path success");
 
 	sprintf(filename, "%s/%s", g_unvmfs_path, g_unvmfs_file);
 	fd = open(filename, O_CREAT | O_RDWR);
 	if (fd < 0) {
 		handle_error("open g_unvmfs_path failed.");
 	}
+    UNVMFS_DEBUG("open g_unvmfs_file success");
 	s = posix_fallocate(fd, 0, NVM_MMAP_SIZE);
     if (__glibc_unlikely(s != 0)) {
       handle_error("fallocate");
     }
+    UNVMFS_DEBUG("fallocate g_unvmfs_file success");
+    
 	g_nvm_base_addr = mmap(NULL, NVM_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
 	if (__glibc_unlikely(g_nvm_base_addr == NULL)) {
 		  handle_error("g_nvm_base_addr is NULL.");
 	}
-
+    UNVMFS_DEBUG("mmap g_unvmfs_file success");
+    
 	init_num = g_nvm_base_addr;
 	if (__sync_bool_compare_and_swap(init_num, 0ULL, SB_INIT_NUMBER)) {
         kernel_page_list_init();
@@ -65,6 +70,8 @@ void init_env(void)
         kernel_superblock_init(g_nvm_base_addr, g_unvmfs_path);
 
         kernel_gc_thread_init();
+
+        UNVMFS_DEBUG("init super block success");
 	}
 	
 }

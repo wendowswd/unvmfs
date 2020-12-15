@@ -201,5 +201,7 @@ void kernel_gc_thread_init(void)
     if (__glibc_unlikely(res != 0)) {
         handle_error("kernel_gc_thread_init failed");
     }
+
+    UNVMFS_DEBUG("kernel_gc_thread_init success");
 }
 
