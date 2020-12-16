@@ -14,8 +14,6 @@
 #include "types.h"
 #include "debug.h"
 
-extern void *g_nvm_base_addr;
-
 //#define CPU_NUMS 64
 
 #define OFFSET_NULL (0xffffffffffffffff)
@@ -85,6 +83,8 @@ extern void *g_nvm_base_addr;
 #define INVALID_IN_VALID 0.5
 /* garbage collection */
 
+
+
 #define NSECS_PER_SEC 1000000000
 static inline u64 get_curr_time(void)
 {
@@ -94,77 +94,20 @@ static inline u64 get_curr_time(void)
     return curr.tv_sec * NSECS_PER_SEC + curr.tv_nsec;
 }
 
-static inline void *get_superblock(void)
-{
-    return g_nvm_base_addr;
-}
-
-static inline void *get_page_list_base_addr(void)
-{
-    return (char *)g_nvm_base_addr + PAGE_LIST_START * PAGE_SIZE;
-}
-
-static inline void *get_inode_list_base_addr(void)
-{
-    return (char *)g_nvm_base_addr + INODE_TABLE_START * PAGE_SIZE;
-}
-
-static inline void *get_radixtree_list_base_addr(void)
-{
-    return (char *)g_nvm_base_addr + RADIXTREE_START * PAGE_SIZE;
-}
-
-static inline void *get_free_space_base_addr(void)
-{
-    return (char *)g_nvm_base_addr + FREE_SPACE_START * PAGE_SIZE;
-}
-
-static inline void *get_local_page_list_addr(u64 num)
-{
-    return (char *)g_nvm_base_addr + PAGE_LIST_START * PAGE_SIZE + sizeof(pagelist_t) * num;
-}
-
-static inline void *get_radixtree_table_addr(u64 num)
-{
-    return (char *)g_nvm_base_addr + RADIXTREE_START * PAGE_SIZE + sizeof(allocator_list_t) * num;
-}
-
-static inline void *get_unvmfs_inode_table_addr(u64 num)
-{
-    return (char *)g_nvm_base_addr + INODE_TABLE_START * PAGE_SIZE + sizeof(allocator_list_t) * num;
-}
-
-static inline void *get_nvm_page_node_addr(u64 offset)
-{
-    return (char *)g_nvm_base_addr + offset + PAGE_SIZE;
-}
-
-static inline void *get_nvm_node2page_addr(void *addr)
-{
-    return (char *)addr - PAGE_SIZE;
-}
-
-static inline void *get_nvm_page2node_addr(void *addr)
-{
-    return (char *)addr + PAGE_SIZE;
-}
-
-static inline u64 get_nvm_page_off2free_space(u64 offset)
-{
-    return offset - FREE_SPACE_START * PAGE_SIZE;
-}
-
-static inline u64 nvm_addr2off(void *addr)
-{
-    return (char *)addr - (char *)g_nvm_base_addr;
-}
-
-static inline void *nvm_off2addr(u64 offset)
-{
-    return (char *)g_nvm_base_addr + offset;
-}
-
-// extern function
-//extern static inline int get_cpuid(void);
+// addr translate
+inline void *get_superblock(void);
+inline void *get_page_list_base_addr(void);
+inline void *get_inode_list_base_addr(void);
+inline void *get_radixtree_list_base_addr(void);
+inline void *get_free_space_base_addr(void);
+inline void *get_local_page_list_addr(u64 num);
+inline void *get_radixtree_table_addr(u64 num);
+inline void *get_unvmfs_inode_table_addr(u64 num);
+inline void *get_nvm_page_node_addr(u64 offset);
+inline void *get_nvm_node2page_addr(void *addr);
+inline void *get_nvm_page2node_addr(void *addr);
+inline u64 get_nvm_page_off2free_space(u64 offset);
+inline u64 nvm_addr2off(void *addr);
+inline void *nvm_off2addr(u64 offset);
 
 #endif /* _UNVMFS_INTERNAL_H */

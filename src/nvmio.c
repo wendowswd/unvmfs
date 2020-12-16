@@ -21,12 +21,13 @@
 #include "allocator.h"
 #include "debug.h"
 
+extern void *g_nvm_base_addr;
+
 extern inline int get_cpu_nums(void);
 extern void kernel_gc_thread_init(void);
 
 static char *g_unvmfs_path = NULL;
 static char *g_unvmfs_file = "unvmfs_map";
-void *g_nvm_base_addr = NULL;
 
 bool process_initialized = false;
 extern u32 g_cpu_nums;

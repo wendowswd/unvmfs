@@ -30,10 +30,9 @@ extern bool process_initialized;
 extern u64 g_write_times_cnt;
 extern u64 g_read_times_cnt;
 
-
 int unvmcreat(const char *filename, mode_t mode) {
     s32 fd;
-    struct unvmfs_super_block *sb = get_superblock();
+    struct unvmfs_super_block *sb = NULL;
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
     
@@ -41,6 +40,7 @@ int unvmcreat(const char *filename, mode_t mode) {
         init_unvmfs();
     }
 
+    sb = get_superblock();
     fd = hashmap_hash_s32(filename);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset != OFFSET_NULL) {
@@ -64,7 +64,7 @@ int unvmcreat(const char *filename, mode_t mode) {
 
 int unvmopen(const char *path, int flags, ...) {
     s32 fd;
-    struct unvmfs_super_block *sb = get_superblock();
+    struct unvmfs_super_block *sb = NULL;
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
 
@@ -72,6 +72,7 @@ int unvmopen(const char *path, int flags, ...) {
         init_unvmfs();
     }
 
+    sb = get_superblock();
     fd = hashmap_hash_s32(path);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset == OFFSET_NULL) {
