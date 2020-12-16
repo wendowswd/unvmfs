@@ -71,7 +71,7 @@
 
 /* write log */
 #define MAX_NUM_PAGE_PER_ENTRY 64
-#define WRITE_LOG_PERALLOC 1
+#define WRITE_LOG_PERALLOC 1  // only 1 is ok
 /* write log */
 
 /* garbage collection */

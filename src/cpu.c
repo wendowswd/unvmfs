@@ -21,9 +21,8 @@ inline int get_cpuid(void)
 {
     u64 cpuid;
 
-    if (__sync_bool_compare_and_swap(&current_cpu, MAX_CPU_COUNT, MIN_CPU_COUNT)) {
-        cpuid = __sync_fetch_and_add(&current_cpu, 1);
-    }
+    __sync_bool_compare_and_swap(&current_cpu, MAX_CPU_COUNT, MIN_CPU_COUNT);
+    cpuid = __sync_fetch_and_add(&current_cpu, 1);
     
     return cpuid % g_cpu_nums;
 }

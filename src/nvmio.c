@@ -114,9 +114,11 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     u64 entry_size = sizeof(struct file_log_entry);
     list_node_t *pages = NULL;
     list_node_t *last_page = NULL;
-    u64 free_space = nvm_addr2off(get_free_space_base_addr());
-    u64 last_page_off = free_space + (*log_tail - free_space - 1) / UNVMFS_PAGE_SIZE * UNVMFS_PAGE_SIZE;
-    
+    u64 free_space;
+    u64 last_page_off;
+
+    free_space = nvm_addr2off(get_free_space_base_addr());
+    last_page_off = free_space + (*log_tail - free_space - 1) / UNVMFS_PAGE_SIZE * UNVMFS_PAGE_SIZE;
     if (is_last_entry(*log_tail)) {
         last_page = get_nvm_page_node_addr(last_page_off);
         pages = alloc_free_pages(WRITE_LOG_PERALLOC);
@@ -159,6 +161,27 @@ void update_inode_tail(struct unvmfs_inode *inode, u64 log_tail)
 {
     inode->log_tail = log_tail;
 }
+
+void update_inode_offset(struct unvmfs_inode *inode, u64 cnt)
+{
+    inode->file_off += cnt;
+}
+
+void update_inode_size(struct unvmfs_inode *inode)
+{
+    inode->i_size = inode->file_off;
+}
+
+void update_inode_info(struct unvmfs_inode *inode, u64 log_tail, u64 cnt)
+{
+    update_inode_tail(inode, log_tail);
+    
+    update_inode_offset(inode, cnt);
+    if (inode->file_off > inode->i_size) {
+        update_inode_size(inode);
+    }
+}
+
 
 u64 next_log_page(u64 tail)
 {
@@ -203,6 +226,8 @@ void update_radixtree(struct unvmfs_inode *inode, u64 old_log_tail)
     struct file_log_entry *old_entry = NULL;
     list_node_t *page_node = NULL;
 
+    UNVMFS_DEBUG("update_radixtree start");
+
     while (curr_off != log_tail) {
         if (is_last_entry(curr_off)) {
             curr_off = next_log_page(curr_off);
@@ -224,6 +249,8 @@ void update_radixtree(struct unvmfs_inode *inode, u64 old_log_tail)
 
         curr_off += entry_size;
     }
+
+    UNVMFS_DEBUG("update_radixtree success");
 }
 
 
@@ -232,7 +259,6 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt)
     int i;
     u64 file_off;
     u64 file_size;
-    u64 writed = 0;
     u64 offset;
     u32 page_nums;
     u32 start_page;
@@ -254,6 +280,8 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt)
     u64 entry_off;
     
     struct file_log_entry *entry = NULL;
+
+    UNVMFS_DEBUG("nvmio_write start");
 
     pthread_rwlock_wrlock(&inode->rwlockp);
     log_tail = inode->log_tail;
@@ -329,8 +357,9 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt)
             }
         }
 
-        if (file_off + writed > file_size) {
-            file_size = file_off + writed;
+        file_off += wr_size;
+        if (file_off > file_size) {
+            file_size = file_off;
         }
 
         start_write_off = start_page;
@@ -340,19 +369,19 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt)
         page_nums -= alloc_num;
         total_size -= wr_size;
         user_buf += wr_size;
-        writed += wr_size;
         start_page += alloc_num * PAGE_SIZE;
         offset = 0;
-        
     }
     
     old_log_tail = inode->log_tail;
-    update_inode_tail(inode, log_tail);
+
+    update_inode_info(inode, log_tail, cnt);
 
     update_radixtree(inode, old_log_tail);
 
     pthread_rwlock_unlock(&inode->rwlockp);
 
+    UNVMFS_DEBUG("nvmio_write success");
     return cnt;
 }
 
@@ -367,6 +396,8 @@ ssize_t nvmio_read(struct unvmfs_inode *inode, void *buf, size_t cnt)
     char *page_addr = NULL;
     char *user_buf = buf;
     char fill_zero[PAGE_SIZE];
+
+    UNVMFS_DEBUG("nvmio_read start");
 
     memset(fill_zero, 0, PAGE_SIZE);
 
@@ -407,8 +438,12 @@ ssize_t nvmio_read(struct unvmfs_inode *inode, void *buf, size_t cnt)
         start_page += PAGE_SIZE;
         offset = 0;
     }
+
+    update_inode_offset(inode, cnt);
     
     pthread_rwlock_unlock(&inode->rwlockp);
+
+    UNVMFS_DEBUG("nvmio_read success");
 
     return cnt;
 }

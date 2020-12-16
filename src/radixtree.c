@@ -69,7 +69,7 @@ void set_radixtree_node(radixtree_t *root, u64 value, u64 index, radixtree_type_
 
     UNVMFS_DEBUG("set_radixtree_node start");
 
-    if (root == NULL || node == NULL) {
+    if (root == NULL) {
         return;
     }
 

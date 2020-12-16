@@ -169,6 +169,7 @@ off_t unvmlseek(int fd, off_t offset, int whence)
             inode->file_off = inode->i_size;
             inode->file_off += offset;
         default:
+            pthread_rwlock_unlock(&inode->rwlockp);
             // SEEK_DATA, SEEK_HOLE if needed
             return EINVAL;
     }
