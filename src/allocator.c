@@ -40,6 +40,9 @@ void init_allocator_list(allocator_list_t *alloc_list)
 void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
 {
     int i;
+    list_node_t *head = NULL;
+    list_node_t *next = NULL;
+    list_node_t *node_head = NULL;
     list_node_t *node = NULL;
     pagelist_t *global_page_list = get_page_list_base_addr();
 
@@ -47,12 +50,22 @@ void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
     
     pthread_mutex_lock(&global_page_list->mutex);
     node = get_nvm_page_node_addr(global_page_list->head);
-    local_page_list->head = node->offset;
+    node_head = node;
+    
     for (i = 0; i < page_cnt - 1; ++i) {
         node = get_nvm_page_node_addr(node->next_offset);
     }
     global_page_list->head = node->next_offset;
     node->next_offset = OFFSET_NULL;
+
+    if (local_page_list->head == OFFSET_NULL) {
+        local_page_list->head = node_head->offset;
+    } else {
+        head = get_nvm_page_node_addr(local_page_list->head);
+        next = get_nvm_page_node_addr(head->next_offset);
+        head->next_offset = node_head->offset;
+        node->next_offset = next->offset;
+    }
 
     global_page_list->count += -page_cnt;
     local_page_list->count += page_cnt;
@@ -133,6 +146,7 @@ void fill_radixtree_node_list(allocator_list_t *alloc_list)
     int obj_size;
     int obj_num;
     list_node_t *node = NULL;
+    list_node_t *prev_node = NULL;
     radixtree_node_t *tree_prev = NULL;
     radixtree_node_t *tree_node = NULL;
 
@@ -153,10 +167,13 @@ void fill_radixtree_node_list(allocator_list_t *alloc_list)
             } else {
                 tree_node->next = nvm_addr2off(tree_prev);
             }
-            
+            tree_prev = tree_node;
         }
-        if (node->next_offset != OFFSET_NULL)
+        if (node->next_offset != OFFSET_NULL) {
+            prev_node = node;
             node = get_nvm_page_node_addr(node->next_offset);
+            prev_node->next_offset = OFFSET_NULL;
+        }
     }
 
     alloc_list->head = nvm_addr2off(tree_node);
@@ -167,7 +184,7 @@ void fill_radixtree_node_list(allocator_list_t *alloc_list)
 
 u64 alloc_radixtree_node(void)
 {
-    int cpuid = get_cpuid() + 1;
+    int cpuid = get_cpuid();
     radixtree_node_t *node = NULL;
     u64 node_offset;
     allocator_list_t *alloc_list = get_radixtree_table_addr(cpuid);
@@ -194,7 +211,7 @@ u64 alloc_radixtree_node(void)
 
 void free_radixtree_node(radixtree_node_t *node)
 {
-    int cpuid = get_cpuid() + 1;
+    int cpuid = get_cpuid();
     allocator_list_t *alloc_list = get_radixtree_table_addr(cpuid);
     radixtree_node_t *head = nvm_off2addr(alloc_list->head);
     u64 next = head->next;
@@ -216,6 +233,7 @@ void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
     int obj_size;
     int obj_num;
     list_node_t *node = NULL;
+    list_node_t *prev_node = NULL;
     struct unvmfs_inode *inode_prev = NULL;
     struct unvmfs_inode *inode_node = NULL;
 
@@ -236,10 +254,13 @@ void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
             } else {
                 inode_node->next = nvm_addr2off(inode_prev);
             }
-            
+            inode_prev = inode_node;
         }
-        if (node->next_offset != OFFSET_NULL)
+        if (node->next_offset != OFFSET_NULL) {
+            prev_node = node;
             node = get_nvm_page_node_addr(node->next_offset);
+            prev_node->next_offset = OFFSET_NULL;
+        }
     }
 
     alloc_list->head = nvm_addr2off(inode_node);
@@ -250,7 +271,7 @@ void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
 
 u64 alloc_unvmfs_inode(void)
 {
-    int cpuid = get_cpuid() + 1;
+    int cpuid = get_cpuid();
     struct unvmfs_inode *node = NULL;
     u64 node_offset;
     allocator_list_t *alloc_list = get_unvmfs_inode_table_addr(cpuid);
@@ -277,7 +298,7 @@ u64 alloc_unvmfs_inode(void)
 
 void free_unvmfs_inode(struct unvmfs_inode *node)
 {
-    int cpuid = get_cpuid() + 1;
+    int cpuid = get_cpuid();
     allocator_list_t *alloc_list = get_unvmfs_inode_table_addr(cpuid);
     struct unvmfs_inode *head = nvm_off2addr(alloc_list->head);
     u64 next = head->next;

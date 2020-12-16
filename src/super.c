@@ -15,6 +15,8 @@ extern u32 g_cpu_nums;
 
 void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
 {
+    UNVMFS_DEBUG("kernel_superblock_init start");
+
     addr->s_size = NVM_MMAP_SIZE;
     addr->s_blocksize = PAGE_SIZE;
     addr->num_blocks = NVM_MMAP_SIZE / addr->s_blocksize;
@@ -36,6 +38,7 @@ void kernel_page_list_init(void)
     u64 free_num_pages = NVM_FREE_NUM_PAGES;
     char *page_list_base_addr = get_page_list_base_addr();
     char *free_space_base_addr = get_free_space_base_addr();
+    u64 free_space_offset = nvm_addr2off(free_space_base_addr);
     
     pagelist_t *global_page_list = (pagelist_t *)page_list_base_addr;
     pagelist_t *local_page_list = NULL;
@@ -43,11 +46,13 @@ void kernel_page_list_init(void)
     list_node_t *node = NULL;
     list_node_t *prev = NULL;
 
+    UNVMFS_DEBUG("kernel_page_list_init start");
+
     pthread_mutex_init(&global_page_list->mutex, NULL);
     global_page_list->count = free_num_pages;
     for (i = 0; i < free_num_pages; ++i) {
         node = (list_node_t *)(free_space_base_addr + (i * UNVMFS_PAGE_SIZE + PAGE_SIZE));
-        node->offset = i;
+        node->offset = free_space_offset + i * UNVMFS_PAGE_SIZE;
         if (prev == NULL) {
             node->next_offset = OFFSET_NULL;
         } else {
@@ -78,6 +83,8 @@ void kernel_page_list_init(void)
 
 void kernel_inode_list_init(void)
 {
+    UNVMFS_DEBUG("kernel_inode_list_init start");
+
     int i;
     int cpu_nums = g_cpu_nums;
     allocator_list_t *alloc_list = NULL;
@@ -93,6 +100,8 @@ void kernel_inode_list_init(void)
 
 void kernel_radixtree_list_init(void)
 {
+    UNVMFS_DEBUG("kernel_inode_list_init start");
+
     int i;
     int cpu_nums = g_cpu_nums;
     allocator_list_t *alloc_list = NULL;
