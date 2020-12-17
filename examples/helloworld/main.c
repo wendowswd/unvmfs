@@ -15,7 +15,7 @@
 	} while (0)
 
 #define FILE_PATH "/home/wenduo/unvmfs/testfile"
-#define FILE_SIZE (1UL << 11)
+#define FILE_SIZE (1UL << 16)
 #define BUF_SIZE (1UL << 10)
 
 int main(void) {

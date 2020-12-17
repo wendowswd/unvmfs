@@ -116,10 +116,11 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     list_node_t *last_page = NULL;
     u64 free_space;
     u64 last_page_off;
+    struct file_log_entry *entry = nvm_off2addr(*log_tail);
 
-    free_space = nvm_addr2off(get_free_space_base_addr());
-    last_page_off = free_space + (*log_tail - free_space - 1) / UNVMFS_PAGE_SIZE * UNVMFS_PAGE_SIZE;
     if (is_last_entry(*log_tail)) {
+        free_space = nvm_addr2off(get_free_space_base_addr());
+        last_page_off = free_space + (*log_tail - free_space) / UNVMFS_PAGE_SIZE * UNVMFS_PAGE_SIZE;
         last_page = get_nvm_page_node_addr(last_page_off);
         pages = alloc_free_pages(WRITE_LOG_PERALLOC);
         last_page->next_offset = pages->offset;
@@ -135,7 +136,7 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     *log_tail += entry_size;
     pages = entry2log_page(nvm_off2addr(*log_tail));
     ++pages->obj_cnt;
-    return nvm_off2addr(*log_tail);
+    return entry;
 }
 
 void init_log_entry(struct file_log_entry *entry, u64 pages, u64 file_size, 
@@ -235,7 +236,7 @@ void update_radixtree(struct unvmfs_inode *inode, u64 old_log_tail)
         }
         
         entry = nvm_off2addr(curr_off);
-        page_off = entry->start_write_off / PAGE_SIZE * PAGE_SIZE;
+        page_off = entry->start_write_off & PAGE_MASK;
         data = entry->data;
         for (i = 0; i < entry->num_pages; ++i) {
             file_page = get_radixtree_node(&inode->radix_tree, page_off, RADIXTREE_PAGE);
@@ -296,7 +297,7 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt)
     file_size = inode->i_size;
     offset = file_off & (~PAGE_MASK);
     page_nums = ((cnt + offset - 1) >> PAGE_SHIFT) + 1;
-    start_page = file_off >> PAGE_SHIFT;
+    start_page = file_off & PAGE_MASK;
     
 
     while (page_nums > 0) {
@@ -436,7 +437,7 @@ ssize_t nvmio_read(struct unvmfs_inode *inode, void *buf, size_t cnt)
     }
     
     offset = file_off & (~PAGE_MASK);
-    start_page = file_off >> PAGE_SHIFT;
+    start_page = file_off & PAGE_MASK;
 
     while (total_size > 0) {
         part_page_off = get_radixtree_node(&inode->radix_tree, start_page, RADIXTREE_PAGE);
