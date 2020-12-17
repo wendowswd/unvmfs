@@ -15,13 +15,13 @@
 	} while (0)
 
 #define FILE_PATH "/home/wenduo/unvmfs/testfile"
-#define FILE_SIZE (1UL << 16)
+#define FILE_SIZE (1UL << 26)
 #define BUF_SIZE (1UL << 10)
 
 int main(void) {
 	char write_buf[BUF_SIZE];
     char read_buf[BUF_SIZE];
-	off_t i;
+	off_t i, j;
 	int fd, s;
 
 	fd = open(FILE_PATH, O_CREAT | O_RDWR);
@@ -39,10 +39,19 @@ int main(void) {
     for (i = 0; i < FILE_SIZE; i += BUF_SIZE) {
         memset(read_buf, 0, BUF_SIZE);
 		read(fd, read_buf, BUF_SIZE);
-        if (strcmp(write_buf, read_buf) != 0) {
-            printf("file op err \n");
+        for (j = 0; j < BUF_SIZE; ++j) {
+            if (write_buf[j] != read_buf[j]) {
+                printf("file op err \n");
+                break;
+            }
+        }
+        if (j < BUF_SIZE) {
+            break;
         }
 	}
+    if (i == FILE_SIZE) {
+        printf("file op success \n");
+    }
 
 	s = close(fd);
 	if (s != 0) {
