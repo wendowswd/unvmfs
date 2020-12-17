@@ -29,7 +29,7 @@ struct file_log_entry {
 
 void init_unvmfs(void);
 struct file_log_entry *get_log_entry(u64 *log_tail);
-void init_log_entry(struct file_log_entry *entry, list_node_t *pages, u64 file_size, 
+void init_log_entry(struct file_log_entry *entry, u64 pages, u64 file_size, 
                             u64 alloc_num, u64 start_wrtie_off, u64 end_write_off);
 void update_inode_tail(struct unvmfs_inode *inode, u64 log_tail);
 

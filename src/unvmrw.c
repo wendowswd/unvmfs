@@ -44,11 +44,13 @@ int unvmcreat(const char *filename, mode_t mode) {
     fd = hashmap_hash_s32(filename);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset != OFFSET_NULL) {
+        UNVMFS_LOG("creat, inode exist");
         return EEXIST;
     }
 
     inode_offset = alloc_unvmfs_inode();
     if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("creat, alloc inode failed");
         return INODE_FAILED;
     }
 
@@ -77,10 +79,12 @@ int unvmopen(const char *path, int flags, ...) {
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset == OFFSET_NULL) {
         if (!(flags & O_CREAT)) {
+            UNVMFS_LOG("open, inode not exist and !O_CREAT");
             return EEXIST;
         }
         inode_offset = alloc_unvmfs_inode();
         if (inode_offset == OFFSET_NULL) {
+            UNVMFS_LOG("open, O_CREAT, alloc inode failed");
             return INODE_FAILED;
         }
     }
@@ -111,6 +115,7 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
 
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("read, no such inode");
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
@@ -132,6 +137,7 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
 
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("write, no such inode");
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
@@ -154,6 +160,7 @@ off_t unvmlseek(int fd, off_t offset, int whence)
 
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("lseek, no such inode");
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
@@ -163,11 +170,14 @@ off_t unvmlseek(int fd, off_t offset, int whence)
     switch (whence) {
         case SEEK_SET:
             inode->file_off = offset;
+            break;
         case SEEK_CUR:
             inode->file_off += offset;
+            break;
         case SEEK_END:
             inode->file_off = inode->i_size;
             inode->file_off += offset;
+            break;
         default:
             pthread_rwlock_unlock(&inode->rwlockp);
             // SEEK_DATA, SEEK_HOLE if needed

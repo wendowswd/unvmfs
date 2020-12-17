@@ -29,6 +29,7 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
     struct file_log_entry *log_entry = NULL;
     struct file_log_entry *new_entry = NULL;
     u64 data;
+    u64 data_pages;
     u64 log_tail;
 
     list_node_t *prev_node = NULL;
@@ -54,6 +55,7 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
         while (j < log_entry->num_pages) {
             // add valid pages to new log entry
             if (!entry_invalid_page(log_entry, j)) {
+                data_pages = data;
                 page_head = get_nvm_page_node_addr(data);
                 page_tail = page_head;
                 page_nums = 0;
@@ -75,7 +77,7 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
                 end_write_off = (j == log_entry->num_pages ? log_entry->end_write_off : 
                                                     log_entry->start_write_off + j * PAGE_SIZE);
                 
-                init_log_entry(new_entry, page_head, inode->i_size, page_nums, start_write_off, end_write_off);
+                init_log_entry(new_entry, data_pages, inode->i_size, page_nums, start_write_off, end_write_off);
 
             }
             

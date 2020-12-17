@@ -48,6 +48,14 @@ unsigned int **countstats_percpu;
 #define UNVMFS_DEBUG(fmt, ...) {}
 #endif
 
+#ifdef _UNVMFS_LOG
+#define UNVMFS_LOG(fmt, ...) \
+      do { fprintf(stdout, "[%s] "fmt"\n", __func__, ##__VA_ARGS__); } while (0)
+#else
+#define UNVMFS_LOG(fmt, ...) {}
+#endif
+
+
 #ifdef _UNVMFS_TIME
 #define UNVMFS_INIT_TIMER() init_timer()
 
