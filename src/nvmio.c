@@ -118,6 +118,8 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     u64 last_page_off;
     struct file_log_entry *entry = nvm_off2addr(*log_tail);
 
+    UNVMFS_DEBUG("get_log_entry start");
+
     if (is_last_entry(*log_tail)) {
         free_space = nvm_addr2off(get_free_space_base_addr());
         last_page_off = free_space + (*log_tail - free_space) / UNVMFS_PAGE_SIZE * UNVMFS_PAGE_SIZE;
@@ -130,12 +132,16 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
         pages->obj_cnt = 1;
         pages->invalid_pages = 0;
         pages->pages_cnt = 0;
+
+        UNVMFS_DEBUG("get_log_entry success");
         return nvm_off2addr(pages->offset);
     }
 
     *log_tail += entry_size;
     pages = entry2log_page(nvm_off2addr(*log_tail));
     ++pages->obj_cnt;
+
+    UNVMFS_DEBUG("get_log_entry success");
     return entry;
 }
 

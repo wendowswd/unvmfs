@@ -40,15 +40,15 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
     u32 free_nums = 0;
     u64 start_write_off;
     u64 end_write_off;
-    
+
+    UNVMFS_DEBUG("gc_log_block start");
+
+    log_tail = inode->log_tail;
     page = nvm_off2addr(page_node->offset);
     num_entries = page_node->obj_cnt;
 
     for (i = 0; i < num_entries; ++i) {
         log_entry = (struct file_log_entry *)(page + (i * entry_size));
-        if (log_entry->num_pages == log_entry->invalid_pages) {
-
-        }
         
         data = log_entry->data;
         j = 0;
@@ -73,9 +73,9 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
                 prev_node->next_offset = OFFSET_NULL;
                 
                 new_entry = get_log_entry(&log_tail);
-                start_write_off = log_entry->start_write_off + k * PAGE_SIZE;
+                start_write_off = (log_entry->start_write_off & PAGE_MASK) + k * PAGE_SIZE;
                 end_write_off = (j == log_entry->num_pages ? log_entry->end_write_off : 
-                                                    log_entry->start_write_off + j * PAGE_SIZE);
+                                                    (log_entry->start_write_off & PAGE_MASK) + j * PAGE_SIZE);
                 
                 init_log_entry(new_entry, data_pages, inode->i_size, page_nums, start_write_off, end_write_off);
 
@@ -108,10 +108,13 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
         }
     }
 
+    // free entry page
+    free_pages(page_node, 1);
+    // free data page
     free_pages(free_head, free_nums);
-
     update_inode_tail(inode, log_tail);
-
+    
+    UNVMFS_DEBUG("gc_log_block success");
 }
 
 void start_gc_task(void)
@@ -125,16 +128,17 @@ void start_gc_task(void)
     u64 page_tail;
     u64 prev_page = 0;
     u64 free_space_off;
+
+    UNVMFS_DEBUG("start_gc_task start");
     
     sb = get_superblock();
 
     pthread_rwlock_wrlock(&sb->rwlockp);
     entry = sb->s_list.prev;
+    inode = list_entry(entry, struct unvmfs_inode, l_node);
     list_del(entry);
     list_add(entry, &sb->s_list);
     pthread_rwlock_unlock(&sb->rwlockp);
-
-    inode = list_entry(entry, struct unvmfs_inode, l_node);
     
     pthread_rwlock_wrlock(&inode->rwlockp);
     page_head = inode->log_head;
@@ -151,14 +155,19 @@ void start_gc_task(void)
                 prev_node = get_nvm_page_node_addr(prev_page);
                 prev_node->next_offset = page_node->next_offset;
             }
-            gc_log_block(inode, page_node);
+            page_head = page_node->next_offset;
             
+            page_node->next_offset = OFFSET_NULL;
+            gc_log_block(inode, page_node);
+        } else {
+            prev_page = page_node->offset;
+            page_head = page_node->next_offset;
         }
-        prev_page = page_head;
-        page_head = page_node->next_offset;
     }
     
     pthread_rwlock_unlock(&inode->rwlockp);
+
+    UNVMFS_DEBUG("start_gc_task success");
 }
 
 void *gc_task_thread(void *args)
