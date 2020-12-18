@@ -31,6 +31,7 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
     u64 data;
     u64 data_pages;
     u64 log_tail;
+    //u64 old_log_tail;
 
     list_node_t *prev_node = NULL;
     list_node_t *page_head = NULL;
@@ -44,6 +45,7 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
     UNVMFS_DEBUG("gc_log_block start");
 
     log_tail = inode->log_tail;
+    //old_log_tail = log_tail;
     page = nvm_off2addr(page_node->offset);
     num_entries = page_node->obj_cnt;
 
@@ -78,7 +80,6 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
                                                     (log_entry->start_write_off & PAGE_MASK) + j * PAGE_SIZE);
                 
                 init_log_entry(new_entry, data_pages, inode->i_size, page_nums, start_write_off, end_write_off);
-
             }
             
             // free invalid pages
@@ -112,7 +113,10 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
     free_pages(page_node, 1);
     // free data page
     free_pages(free_head, free_nums);
+    
     update_inode_tail(inode, log_tail);
+
+    //update_radixtree(inode, old_log_tail);
     
     UNVMFS_DEBUG("gc_log_block success");
 }

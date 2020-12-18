@@ -42,7 +42,9 @@ int unvmcreat(const char *filename, mode_t mode) {
 
     sb = get_superblock();
     fd = hashmap_hash_s32(filename);
+    pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
     if (inode_offset != OFFSET_NULL) {
         UNVMFS_LOG("creat, inode exist");
         return EEXIST;
@@ -76,7 +78,9 @@ int unvmopen(const char *path, int flags, ...) {
 
     sb = get_superblock();
     fd = hashmap_hash_s32(path);
+    pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
     if (inode_offset == OFFSET_NULL) {
         if (!(flags & O_CREAT)) {
             UNVMFS_LOG("open, inode not exist and !O_CREAT");
@@ -113,7 +117,9 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
 
+    pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("read, no such inode");
         return INODE_FAILED;
@@ -135,7 +141,9 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
 
+    pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("write, no such inode");
         return INODE_FAILED;
@@ -158,7 +166,9 @@ off_t unvmlseek(int fd, off_t offset, int whence)
     struct unvmfs_inode *inode = NULL;
     off_t off;
 
+    pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("lseek, no such inode");
         return INODE_FAILED;
