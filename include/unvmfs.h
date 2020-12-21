@@ -22,9 +22,9 @@ extern ssize_t unvmread(int fd, void *buf, size_t cnt);
 extern ssize_t unvmwrite(int fd, const void *buf, size_t cnt);
 #define lseek(fd, offset, whence) unvmlseek(fd, offset, whence)
 extern off_t unvmlseek(int fd, off_t offset, int whence);
-#define truncate(fd, length) unvmtruncate(fd, length)
+#define truncate(fd, length) unvmftruncate(fd, length)
 extern int unvmftruncate(int fd, off_t length);
-#define fsync(fd) nvfsync(fd)
+#define fsync(fd) unvmfsync(fd)
 extern int unvmfsync(int fd);
 
 
