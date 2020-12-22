@@ -116,6 +116,7 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     struct unvmfs_super_block *sb = get_superblock();
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
+    ssize_t ret;
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -132,7 +133,12 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
 
     ++g_read_times_cnt;
 
-    return nvmio_read(inode, buf, cnt);
+    pthread_rwlock_rdlock(&inode->rwlockp);
+    ret = nvmio_read(inode, buf, cnt, inode->file_off);
+    update_inode_offset(inode, cnt);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    
+    return ret;
 }
 
 ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
@@ -140,6 +146,7 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     struct unvmfs_super_block *sb = get_superblock();
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
+    ssize_t ret;
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -156,7 +163,12 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
 
     ++g_write_times_cnt;
 
-    return nvmio_write(inode, buf, cnt);
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    ret = nvmio_write(inode, buf, cnt, inode->file_off);
+    update_inode_info(inode, cnt);
+    pthread_rwlock_unlock(&inode->rwlockp);
+
+    return ret;
 }
 
 off_t unvmlseek(int fd, off_t offset, int whence)
@@ -209,6 +221,152 @@ int unvmftruncate(int fd, off_t length)
 int unvmfsync(int fd)
 {
     // todo
+    return 0;
+}
+
+ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
+{
+    struct unvmfs_super_block *sb = get_superblock();
+    u64 inode_offset;
+    struct unvmfs_inode *inode = NULL;
+    ssize_t ret;
+
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("read, no such inode");
+        return INODE_FAILED;
+    }
+    inode = nvm_off2addr(inode_offset);
+
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    list_move(&inode->l_node, &sb->s_list);
+    pthread_rwlock_unlock(&sb->rwlockp);
+
+    ++g_read_times_cnt;
+
+    pthread_rwlock_rdlock(&inode->rwlockp);
+    ret = nvmio_read(inode, buf, cnt, offset);
+    //update_inode_offset(inode, cnt);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    
+    return ret;
+
+}
+
+ssize_t unvmpread64(int fd, void *buf, size_t cnt, off_t offset)
+{
+    return unvmpread(fd, buf, cnt, offset);
+}
+
+ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
+{
+    struct unvmfs_super_block *sb = get_superblock();
+    u64 inode_offset;
+    struct unvmfs_inode *inode = NULL;
+    ssize_t ret;
+
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    if (inode_offset == OFFSET_NULL) {
+        UNVMFS_LOG("write, no such inode");
+        return INODE_FAILED;
+    }
+    inode = nvm_off2addr(inode_offset);
+    
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    list_move(&inode->l_node, &sb->s_list);
+    pthread_rwlock_unlock(&sb->rwlockp);
+
+    ++g_write_times_cnt;
+
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    ret = nvmio_write(inode, buf, cnt, offset);
+    update_inode_size(inode, cnt);
+    pthread_rwlock_unlock(&inode->rwlockp);
+
+    return ret;
+
+}
+
+ssize_t unvmpwrite64(int fd, const void *buf, size_t cnt, off_t offset)
+{
+    return unvmpwrite(fd, buf, cnt, offset);
+}
+
+int unvmrename(const char *oldpath, const char *newpath)
+{
+    //todo
+    return 0;
+}
+
+int unvmlink(const char *existing, const char *new)
+{
+    //todo
+    return 0;
+}
+
+int unvmsymlink(const char *existing, const char *new)
+{
+    //todo
+    return 0;
+}
+
+int unvmunlink(char *pathname)
+{
+    //todo
+    return 0;
+}
+
+ssize_t unvmreadlink(const char *path, char *buf, size_t buf_size)
+{
+    //todo
+    return 0;
+}
+
+int unvmmkdir(char *path, int perm)
+{
+    return (mkdir(path, perm));
+}
+
+int unvmrmdir(char *path)
+{
+    return (rmdir(path));
+}
+
+DIR *unvmopendir(char *path)
+{
+    return (opendir(path));
+}
+
+struct dirent *unvmreaddir(DIR *dirp)
+{
+    return (readdir(dirp));
+
+}
+
+int unvmclosedir(DIR *dirp)
+{
+    return (closedir(dirp));
+}
+
+int unvmstat(char *path, struct stat64 *statbufp)
+{
+    //todo
+    return 0;
+}
+
+int unvmfstat(int fd, struct stat64 *statbufp)
+{
+    //todo
+    return 0;
+}
+
+int unvmaccess(const char *path, int amode)
+{
+    //todo
     return 0;
 }
 
