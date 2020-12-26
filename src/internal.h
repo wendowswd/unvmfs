@@ -65,7 +65,7 @@
 
 /* hashmap */
 #define HASHMAP_BITS 32
-#define HASHMAP_MASK ((1UL << HASHMAP_BITS) - 1)
+#define HASHMAP_MASK ((1UL << (HASHMAP_BITS - 1)) - 1)
 //#define HASH_ELEM_PER_PAGE (PAGE_SIZE / sizeof(hashmap_element))
 /* hashmap */
 
