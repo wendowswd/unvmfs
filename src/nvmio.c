@@ -23,7 +23,7 @@
 
 extern void *g_nvm_base_addr;
 
-extern inline int get_cpu_nums(void);
+extern int get_cpu_nums(void);
 extern void kernel_gc_thread_init(void);
 
 static char *g_unvmfs_path = NULL;

@@ -17,7 +17,7 @@ int g_cpu_nums = 0;
 }*/
 
 u64 current_cpu = 0;
-inline int get_cpuid(void)
+int get_cpuid(void)
 {
     u64 cpuid;
 
@@ -28,7 +28,7 @@ inline int get_cpuid(void)
 }
 
 
-inline int get_cpu_nums(void)
+int get_cpu_nums(void)
 {
     return sysconf(_SC_NPROCESSORS_CONF);
 }

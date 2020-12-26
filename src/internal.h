@@ -95,19 +95,19 @@ static inline u64 get_curr_time(void)
 }
 
 // addr translate
-inline void *get_superblock(void);
-inline void *get_page_list_base_addr(void);
-inline void *get_inode_list_base_addr(void);
-inline void *get_radixtree_list_base_addr(void);
-inline void *get_free_space_base_addr(void);
-inline void *get_local_page_list_addr(u64 num);
-inline void *get_radixtree_table_addr(u64 num);
-inline void *get_unvmfs_inode_table_addr(u64 num);
-inline void *get_nvm_page_node_addr(u64 offset);
-inline void *get_nvm_node2page_addr(void *addr);
-inline void *get_nvm_page2node_addr(void *addr);
-inline u64 get_nvm_page_off2free_space(u64 offset);
-inline u64 nvm_addr2off(void *addr);
-inline void *nvm_off2addr(u64 offset);
+void *get_superblock(void);
+void *get_page_list_base_addr(void);
+void *get_inode_list_base_addr(void);
+void *get_radixtree_list_base_addr(void);
+void *get_free_space_base_addr(void);
+void *get_local_page_list_addr(u64 num);
+void *get_radixtree_table_addr(u64 num);
+void *get_unvmfs_inode_table_addr(u64 num);
+void *get_nvm_page_node_addr(u64 offset);
+void *get_nvm_node2page_addr(void *addr);
+void *get_nvm_page2node_addr(void *addr);
+u64 get_nvm_page_off2free_space(u64 offset);
+u64 nvm_addr2off(void *addr);
+void *nvm_off2addr(u64 offset);
 
 #endif /* _UNVMFS_INTERNAL_H */
