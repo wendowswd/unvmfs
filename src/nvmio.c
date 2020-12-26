@@ -293,7 +293,7 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt, u64
     
     struct file_log_entry *entry = NULL;
 
-    UNVMFS_DEBUG("nvmio_write start");
+    UNVMFS_DEBUG("nvmio_write start, inode=%p, fd=%d", inode, (int)inode->fd);
 
     log_tail = inode->log_tail;
     //file_off = inode->file_off;
@@ -425,7 +425,7 @@ ssize_t nvmio_read(struct unvmfs_inode *inode, void *buf, size_t cnt, u64 file_o
     char *user_buf = buf;
     char fill_zero[PAGE_SIZE];
 
-    UNVMFS_DEBUG("nvmio_read start");
+    UNVMFS_DEBUG("nvmio_read start, inode=%p, fd=%d", inode, (int)inode->fd);
 
     memset(fill_zero, 0, PAGE_SIZE);
 

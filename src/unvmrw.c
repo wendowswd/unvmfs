@@ -35,6 +35,8 @@ int unvmcreat(const char *filename, mode_t mode) {
     struct unvmfs_super_block *sb = NULL;
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
+
+    UNVMFS_DEBUG("start");
     
     if (__glibc_unlikely(!process_initialized)) {
         init_unvmfs();
@@ -63,6 +65,8 @@ int unvmcreat(const char *filename, mode_t mode) {
     set_radixtree_node(&sb->hash_root, inode_offset, fd, RADIXTREE_INODE);
     list_add(&inode->l_node, &sb->s_list);
     pthread_rwlock_unlock(&sb->rwlockp);
+
+    UNVMFS_DEBUG("unvmcreat success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
     return fd;
 }
 
@@ -71,6 +75,8 @@ int unvmopen(const char *path, int flags, ...) {
     struct unvmfs_super_block *sb = NULL;
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
+
+    UNVMFS_DEBUG("start");
 
     if (__glibc_unlikely(!process_initialized)) {
         init_unvmfs();
@@ -101,6 +107,7 @@ int unvmopen(const char *path, int flags, ...) {
         list_add(&inode->l_node, &sb->s_list);
         pthread_rwlock_unlock(&sb->rwlockp);
     }
+    UNVMFS_DEBUG("unvmopen success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
 
     return fd;
 }
@@ -117,6 +124,8 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
+
+    UNVMFS_DEBUG("start");
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -137,6 +146,8 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     ret = nvmio_read(inode, buf, cnt, inode->file_off);
     update_inode_offset(inode, cnt);
     pthread_rwlock_unlock(&inode->rwlockp);
+
+    UNVMFS_DEBUG("unvmread success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
     
     return ret;
 }
@@ -147,6 +158,8 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
+
+    UNVMFS_DEBUG("start");
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -168,6 +181,8 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     update_inode_info(inode, cnt);
     pthread_rwlock_unlock(&inode->rwlockp);
 
+    UNVMFS_DEBUG("unvmwrite success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
+
     return ret;
 }
 
@@ -177,6 +192,8 @@ off_t unvmlseek(int fd, off_t offset, int whence)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
     off_t off;
+
+    UNVMFS_DEBUG("start");
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -209,6 +226,9 @@ off_t unvmlseek(int fd, off_t offset, int whence)
     off = inode->file_off;
     pthread_rwlock_unlock(&inode->rwlockp);
 
+    UNVMFS_DEBUG("unvmlseek success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
+
+
     return off;
 }
 
@@ -231,6 +251,8 @@ ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
 
+    UNVMFS_DEBUG("start");
+
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
     pthread_rwlock_unlock(&sb->rwlockp);
@@ -250,6 +272,8 @@ ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
     ret = nvmio_read(inode, buf, cnt, offset);
     //update_inode_offset(inode, cnt);
     pthread_rwlock_unlock(&inode->rwlockp);
+
+    UNVMFS_DEBUG("unvmpread success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
     
     return ret;
 
@@ -266,6 +290,8 @@ ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
     u64 inode_offset;
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
+
+    UNVMFS_DEBUG("start");
 
     pthread_rwlock_rdlock(&sb->rwlockp);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
@@ -286,6 +312,8 @@ ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
     ret = nvmio_write(inode, buf, cnt, offset);
     update_inode_size(inode, cnt);
     pthread_rwlock_unlock(&inode->rwlockp);
+
+    UNVMFS_DEBUG("unvmpwrite success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
 
     return ret;
 
