@@ -12,22 +12,27 @@ extern "C" {
 #include "../src/unvmrw.h"
 
 extern void init_unvmfs(void);
-#define creat(filename, mode) unvmcreat(filename, mode)
 extern int unvmcreat(const char *filename, mode_t mode);
-#define open(...) unvmopen(__VA_ARGS__)
+#define creat(filename, mode) unvmcreat(filename, mode)
 extern int unvmopen(const char *Path, int flags, ...);
-#define close(fd) unvmclose(fd)
+#define open(...) unvmopen(__VA_ARGS__)
+#define open64(...) unvmopen(__VA_ARGS__)
 extern int unvmclose(int fd);
-#define read(fd, buf, cnt) unvmread(fd, buf, cnt)
+#define close(fd) unvmclose(fd)
 extern ssize_t unvmread(int fd, void *buf, size_t cnt);
-#define write(fd, buf, cnt) unvmwrite(fd, buf, cnt)
+#define read(fd, buf, cnt) unvmread(fd, buf, cnt)
 extern ssize_t unvmwrite(int fd, const void *buf, size_t cnt);
-#define lseek(fd, offset, whence) unvmlseek(fd, offset, whence)
+#define write(fd, buf, cnt) unvmwrite(fd, buf, cnt)
 extern off_t unvmlseek(int fd, off_t offset, int whence);
-#define truncate(fd, length) unvmftruncate(fd, length)
+#define lseek(fd, offset, whence) unvmlseek(fd, offset, whence)
+#define lseek64(fd, offset, whence) unvmlseek(fd, offset, whence)
 extern int unvmftruncate(int fd, off_t length);
-#define fsync(fd) unvmfsync(fd)
+#define truncate(fd, length) unvmftruncate(fd, length)
+#define truncate64(fd, length) unvmftruncate(fd, length)
+#define ftruncate(fd, length) unvmftruncate(fd, length)
+#define ftruncate64(fd, length) unvmftruncate(fd, length)
 extern int unvmfsync(int fd);
+#define fsync(fd) unvmfsync(fd)
 
 // filebench
 //extern int unvmfreemem(int fdfd, off64_t size);
@@ -61,8 +66,10 @@ extern int unvmclosedir(DIR *dirp);
 #define closedir(dirp) unvmclosedir(dirp)
 extern int unvmstat(char *path, struct stat *statbufp);
 #define stat(path, statbufp) unvmstat(path, statbufp)
+#define stat64(path, statbufp) unvmstat(path, statbufp)
 extern int unvmfstat(int fd, struct stat *statbufp);
 #define fstat(fd, statbufp) unvmfstat(fd, statbufp)
+#define fstat64(fd, statbufp) unvmfstat(fd, statbufp)
 extern int unvmaccess(const char *path, int amode);
 #define access(path, amode) unvmaccess(path, amode)
 
