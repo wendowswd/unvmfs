@@ -116,7 +116,7 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     list_node_t *last_page = NULL;
     u64 free_space;
     u64 last_page_off;
-    struct file_log_entry *entry = nvm_off2addr(*log_tail);
+    struct file_log_entry *entry = NULL;
 
     UNVMFS_DEBUG("get_log_entry start");
 
@@ -136,6 +136,8 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
         UNVMFS_DEBUG("get_log_entry success");
         return nvm_off2addr(pages->offset);
     }
+
+    entry = nvm_off2addr(*log_tail);
 
     *log_tail += entry_size;
     pages = entry2log_page(nvm_off2addr(*log_tail));
@@ -345,30 +347,34 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt, u64
         }
         entry_off = nvm_addr2off(entry);
 
+        page_addr = node2page;
         // first page
         if (first_page_wr != 0) {
-            page_addr = node2page;
             page_addr_node = get_nvm_page2node_addr(page_addr);
             page_addr_node->log_entry = entry_off;
             memcpy(page_addr + offset, user_buf, first_page_wr);
             user_buf += (PAGE_SIZE - offset);
+            if (page_addr_node->next_offset != OFFSET_NULL)
+                page_addr = nvm_off2addr(page_addr_node->next_offset);
         }
 
         // middle pages
         for (i = 0; i < mid_num; ++i) {
             page_addr_node = get_nvm_page2node_addr(page_addr);
             page_addr_node->log_entry = entry_off;
-            page_addr = nvm_off2addr(page_addr_node->next_offset);
             memcpy(page_addr, user_buf, PAGE_SIZE);
             user_buf += PAGE_SIZE;
+            if (page_addr_node->next_offset != OFFSET_NULL)
+                page_addr = nvm_off2addr(page_addr_node->next_offset);
         }
         // last page
         if (last_page_wr != 0) {
             page_addr_node = get_nvm_page2node_addr(page_addr);
             page_addr_node->log_entry = entry_off;
-            page_addr = nvm_off2addr(page_addr_node->next_offset);
             memcpy(page_addr, user_buf, last_page_wr);
             user_buf += last_page_wr;
+            if (page_addr_node->next_offset != OFFSET_NULL)
+                page_addr = nvm_off2addr(page_addr_node->next_offset);
         }
 
         // fill first and last page
@@ -380,7 +386,8 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt, u64
             }
         }
         if (last_page_wr != 0) {
-            part_page_off = get_radixtree_node(&inode->radix_tree, start_page, RADIXTREE_PAGE);
+            part_page_off = get_radixtree_node(&inode->radix_tree, 
+                                                start_page + (alloc_num - 1) * PAGE_SIZE, RADIXTREE_PAGE);
             if (part_page_off != OFFSET_NULL) {
                 part_page = nvm_off2addr(part_page_off);
                 memcpy(page_addr + last_page_wr, part_page + last_page_wr, PAGE_SIZE - last_page_wr);
