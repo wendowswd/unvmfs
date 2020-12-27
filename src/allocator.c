@@ -128,7 +128,7 @@ void free_pages(list_node_t *node, u32 page_num)
 
     pthread_mutex_lock(&page_list->mutex);
     head = get_nvm_page_node_addr(page_list->head);
-    next = nvm_addr2off(get_nvm_page_node_addr(head->next_offset));
+    next = head->next_offset;
     head->next_offset = nvm_addr2off((char *)node - PAGE_SIZE);
     tail->next_offset = next;
 
