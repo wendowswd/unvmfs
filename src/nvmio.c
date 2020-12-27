@@ -46,7 +46,7 @@ void init_env(void)
     UNVMFS_DEBUG("get g_unvmfs_path success");
 
 	sprintf(filename, "%s/%s", g_unvmfs_path, g_unvmfs_file);
-	fd = open(filename, O_CREAT | O_RDWR);
+	fd = open(filename, O_CREAT | O_RDWR, 0777);
 	if (fd < 0) {
 		handle_error("open g_unvmfs_path failed.");
 	}
@@ -405,7 +405,7 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt, u64
 
         page_nums -= alloc_num;
         total_size -= wr_size;
-        user_buf += wr_size;
+        //user_buf += wr_size;
         start_page += alloc_num * PAGE_SIZE;
         offset = 0;
     }
