@@ -61,6 +61,8 @@ int unvmcreat(const char *filename, mode_t mode) {
     }
 
     inode = nvm_off2addr(inode_offset);
+    
+    pthread_mutex_lock(&inode->mutex);
     inode->fd = fd;
 
     //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
@@ -69,6 +71,7 @@ int unvmcreat(const char *filename, mode_t mode) {
     list_add(&inode->l_node, &sb->s_list);
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
+    pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmcreat success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
     return fd;
@@ -107,6 +110,7 @@ int unvmopen(const char *path, int flags, ...) {
 
     inode = nvm_off2addr(inode_offset);
     if (flags & O_CREAT) {
+        pthread_mutex_lock(&inode->mutex);
         inode->fd = fd;
         //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
         pthread_mutex_lock(&sb->mutex);
@@ -114,6 +118,7 @@ int unvmopen(const char *path, int flags, ...) {
         list_add(&inode->l_node, &sb->s_list);
         //pthread_rwlock_unlock(&sb->rwlockp);
         pthread_mutex_unlock(&sb->mutex);
+        pthread_mutex_unlock(&inode->mutex);
     }
     UNVMFS_DEBUG("unvmopen success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
 
@@ -146,16 +151,17 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     }
     inode = nvm_off2addr(inode_offset);
 
+    ++g_read_times_cnt;
+
+    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
+    pthread_mutex_lock(&inode->mutex);
+
     //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
     pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
-
-    ++g_read_times_cnt;
-
-    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    
     ret = nvmio_read(inode, buf, cnt, inode->file_off);
     update_inode_offset(inode, cnt);
     //pthread_rwlock_unlock(&inode->rwlockp);
@@ -185,17 +191,18 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
-    
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
-    list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
 
     ++g_write_times_cnt;
 
     //while (pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
     pthread_mutex_lock(&inode->mutex);
+
+    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
+    pthread_mutex_lock(&sb->mutex);
+    list_move(&inode->l_node, &sb->s_list);
+    //pthread_rwlock_unlock(&sb->rwlockp);
+    pthread_mutex_unlock(&sb->mutex);
+    
     ret = nvmio_write(inode, buf, cnt, inode->file_off);
     update_inode_info(inode, cnt);
     //pthread_rwlock_unlock(&inode->rwlockp);
@@ -288,16 +295,17 @@ ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
     }
     inode = nvm_off2addr(inode_offset);
 
+    ++g_read_times_cnt;
+
+    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
+    pthread_mutex_lock(&inode->mutex);
+
     //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
     pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
-
-    ++g_read_times_cnt;
-
-    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    
     ret = nvmio_read(inode, buf, cnt, offset);
     //update_inode_offset(inode, cnt);
     //pthread_rwlock_unlock(&inode->rwlockp);
@@ -333,17 +341,18 @@ ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
-    
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
-    list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
 
     ++g_write_times_cnt;
 
     //while(pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
     pthread_mutex_lock(&inode->mutex);
+
+    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
+    pthread_mutex_lock(&sb->mutex);
+    list_move(&inode->l_node, &sb->s_list);
+    //pthread_rwlock_unlock(&sb->rwlockp);
+    pthread_mutex_unlock(&sb->mutex);
+    
     ret = nvmio_write(inode, buf, cnt, offset);
     update_inode_size(inode, cnt);
     //pthread_rwlock_unlock(&inode->rwlockp);
