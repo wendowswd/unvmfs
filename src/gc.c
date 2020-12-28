@@ -138,6 +138,10 @@ void start_gc_task(void)
     sb = get_superblock();
 
     pthread_rwlock_wrlock(&sb->rwlockp);
+    if (list_empty(&sb->s_list)) {
+        pthread_rwlock_unlock(&sb->rwlockp);
+        return;
+    }
     entry = sb->s_list.prev;
     inode = list_entry(entry, struct unvmfs_inode, l_node);
     list_del(entry);
@@ -186,11 +190,12 @@ void *gc_task_thread(void *args)
     g_list = get_free_space_base_addr();
 
     while (1) {
+        sleep(3);
         access_times = g_write_times_cnt + g_read_times_cnt;
         write_times = g_write_times_cnt;
         read_times = g_read_times_cnt;
         if (access_times == 0) {
-            sleep(5);
+            //sleep(5);
             continue;
         }
         w_rate = (double)write_times / access_times;
@@ -202,7 +207,6 @@ void *gc_task_thread(void *args)
             g_read_times_cnt = 0;
             start_gc_task();
         }
-        sleep(2);
     }
 
 }
