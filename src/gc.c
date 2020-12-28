@@ -105,7 +105,6 @@ void gc_log_block(struct unvmfs_inode *inode, list_node_t *page_node)
                     free_head->next_offset = page_head->offset;
                 }
             }
-
         }
     }
 

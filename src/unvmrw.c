@@ -133,7 +133,7 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
 
-    UNVMFS_DEBUG("start");
+    UNVMFS_DEBUG("start，sb=%p", sb);
 
     //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
     pthread_mutex_lock(&sb->mutex);
@@ -173,7 +173,7 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     struct unvmfs_inode *inode = NULL;
     ssize_t ret;
 
-    UNVMFS_DEBUG("start");
+    UNVMFS_DEBUG("start，sb=%p", sb);
 
     //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
     pthread_mutex_lock(&sb->mutex);
@@ -213,7 +213,7 @@ off_t unvmlseek(int fd, off_t offset, int whence)
     struct unvmfs_inode *inode = NULL;
     off_t off;
 
-    UNVMFS_DEBUG("start");
+    UNVMFS_DEBUG("start，sb=%p", sb);
 
     //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
     pthread_mutex_lock(&sb->mutex);

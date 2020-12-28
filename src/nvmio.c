@@ -118,7 +118,7 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     u64 last_page_off;
     struct file_log_entry *entry = NULL;
 
-    UNVMFS_DEBUG("get_log_entry start");
+    //UNVMFS_DEBUG("get_log_entry start");
 
     if (is_last_entry(*log_tail)) {
         free_space = nvm_addr2off(get_free_space_base_addr());
@@ -143,7 +143,7 @@ struct file_log_entry *get_log_entry(u64 *log_tail)
     pages = entry2log_page(nvm_off2addr(*log_tail));
     ++pages->obj_cnt;
 
-    UNVMFS_DEBUG("get_log_entry success");
+    //UNVMFS_DEBUG("get_log_entry success");
     return entry;
 }
 
@@ -234,7 +234,7 @@ void update_radixtree(struct unvmfs_inode *inode, u64 old_log_tail)
     list_node_t *page_node = NULL;
     u64 data;
 
-    UNVMFS_DEBUG("update_radixtree start");
+    //UNVMFS_DEBUG("update_radixtree start");
 
     while (curr_off != log_tail) {
         if (is_last_entry(curr_off)) {
@@ -262,7 +262,7 @@ void update_radixtree(struct unvmfs_inode *inode, u64 old_log_tail)
         curr_off += entry_size;
     }
 
-    UNVMFS_DEBUG("update_radixtree success");
+    //UNVMFS_DEBUG("update_radixtree success");
 }
 
 

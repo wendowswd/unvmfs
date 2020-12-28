@@ -46,7 +46,7 @@ void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
     list_node_t *node = NULL;
     pagelist_t *global_page_list = get_page_list_base_addr();
 
-    UNVMFS_DEBUG("fill_local_page_list start");
+    //UNVMFS_DEBUG("fill_local_page_list start");
     
     pthread_mutex_lock(&global_page_list->mutex);
     node = get_nvm_page_node_addr(global_page_list->head);
@@ -71,7 +71,7 @@ void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
     local_page_list->count += page_cnt;
     pthread_mutex_unlock(&global_page_list->mutex);
 
-    UNVMFS_DEBUG("fill_local_page_list success");
+    //UNVMFS_DEBUG("fill_local_page_list success");
 }
 
 // todo: currently don't consider page alloc algorithm,all alloc FILL_LOCAL_PAGE_LIST_MAX
@@ -83,7 +83,7 @@ list_node_t *alloc_free_pages(u32 page_num)
     list_node_t *node = NULL;
     pagelist_t *local_page_list = get_local_page_list_addr(cpuid);
 
-    UNVMFS_DEBUG("alloc_free_pages start");
+    //UNVMFS_DEBUG("alloc_free_pages start");
 
     pthread_mutex_lock(&local_page_list->mutex);
     while (local_page_list->count == 0 || local_page_list->count < page_num) {
@@ -102,7 +102,7 @@ list_node_t *alloc_free_pages(u32 page_num)
 
     pthread_mutex_unlock(&local_page_list->mutex);
 
-    UNVMFS_DEBUG("alloc_free_pages success");
+    //UNVMFS_DEBUG("alloc_free_pages success");
 
     return head;
 }
@@ -116,7 +116,7 @@ void free_pages(list_node_t *node, u32 page_num)
     list_node_t *tail = node;
     u64 next;
 
-    UNVMFS_DEBUG("free_pages start");
+    //UNVMFS_DEBUG("free_pages start");
 
     if (page_list->count > FILL_LOCAL_PAGE_LIST_MAX) {
         page_list = get_page_list_base_addr();
@@ -134,7 +134,7 @@ void free_pages(list_node_t *node, u32 page_num)
 
     pthread_mutex_unlock(&page_list->mutex);
 
-    UNVMFS_DEBUG("free_pages success");
+    //UNVMFS_DEBUG("free_pages success");
 }
 
 
@@ -150,7 +150,7 @@ void fill_radixtree_node_list(allocator_list_t *alloc_list)
     radixtree_node_t *tree_prev = NULL;
     radixtree_node_t *tree_node = NULL;
 
-    UNVMFS_DEBUG("fill_radixtree_node_list start");
+    //UNVMFS_DEBUG("fill_radixtree_node_list start");
     
     node = alloc_free_pages(RADIXTREE_NODE_PER_ALLOC);
 
@@ -179,7 +179,7 @@ void fill_radixtree_node_list(allocator_list_t *alloc_list)
     alloc_list->head = nvm_addr2off(tree_node);
     alloc_list->count = RADIXTREE_NODE_PER_ALLOC * obj_num;
 
-    UNVMFS_DEBUG("fill_radixtree_node_list success");
+    //UNVMFS_DEBUG("fill_radixtree_node_list success");
 }
 
 u64 alloc_radixtree_node(void)
@@ -189,7 +189,7 @@ u64 alloc_radixtree_node(void)
     u64 node_offset;
     allocator_list_t *alloc_list = get_radixtree_table_addr(cpuid);
 
-    UNVMFS_DEBUG("alloc_radixtree_node start");
+    //UNVMFS_DEBUG("alloc_radixtree_node start");
     
     pthread_mutex_lock(&alloc_list->mutex);
     if (alloc_list->count == 0) {
@@ -204,7 +204,7 @@ u64 alloc_radixtree_node(void)
     
     pthread_mutex_unlock(&alloc_list->mutex);
 
-    UNVMFS_DEBUG("alloc_radixtree_node success");
+    //UNVMFS_DEBUG("alloc_radixtree_node success");
 
     return node_offset;
 }
@@ -216,7 +216,7 @@ void free_radixtree_node(radixtree_node_t *node)
     radixtree_node_t *head = nvm_off2addr(alloc_list->head);
     u64 next = head->next;
 
-    UNVMFS_DEBUG("free_radixtree_node start");
+    //UNVMFS_DEBUG("free_radixtree_node start");
 
     pthread_mutex_lock(&alloc_list->mutex);
     head->next = nvm_addr2off(node);
@@ -224,7 +224,7 @@ void free_radixtree_node(radixtree_node_t *node)
     
     pthread_mutex_unlock(&alloc_list->mutex);
     
-    UNVMFS_DEBUG("free_radixtree_node success");
+    //UNVMFS_DEBUG("free_radixtree_node success");
 }
 
 void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
@@ -237,7 +237,7 @@ void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
     struct unvmfs_inode *inode_prev = NULL;
     struct unvmfs_inode *inode_node = NULL;
 
-    UNVMFS_DEBUG("fill_unvmfs_inode_list start");
+    //UNVMFS_DEBUG("fill_unvmfs_inode_list start");
     
     node = alloc_free_pages(UNVMFS_INODE_PER_ALLOC);
 
@@ -266,7 +266,7 @@ void fill_unvmfs_inode_list(allocator_list_t *alloc_list)
     alloc_list->head = nvm_addr2off(inode_node);
     alloc_list->count = UNVMFS_INODE_PER_ALLOC * obj_num;
 
-    UNVMFS_DEBUG("fill_unvmfs_inode_list success");
+    //UNVMFS_DEBUG("fill_unvmfs_inode_list success");
 }
 
 u64 alloc_unvmfs_inode(void)
@@ -276,7 +276,7 @@ u64 alloc_unvmfs_inode(void)
     u64 node_offset;
     allocator_list_t *alloc_list = get_unvmfs_inode_table_addr(cpuid);
 
-    UNVMFS_DEBUG("alloc_unvmfs_inode start");
+    //UNVMFS_DEBUG("alloc_unvmfs_inode start");
     
     pthread_mutex_lock(&alloc_list->mutex);
     if (alloc_list->count == 0) {
@@ -291,7 +291,7 @@ u64 alloc_unvmfs_inode(void)
     
     pthread_mutex_unlock(&alloc_list->mutex);
 
-    UNVMFS_DEBUG("alloc_unvmfs_inode success");
+    //UNVMFS_DEBUG("alloc_unvmfs_inode success");
 
     return node_offset;
 }
@@ -303,7 +303,7 @@ void free_unvmfs_inode(struct unvmfs_inode *node)
     struct unvmfs_inode *head = nvm_off2addr(alloc_list->head);
     u64 next = head->next;
 
-    UNVMFS_DEBUG("free_unvmfs_inode start");
+    //UNVMFS_DEBUG("free_unvmfs_inode start");
 
     pthread_mutex_lock(&alloc_list->mutex);
     head->next = nvm_addr2off(node);
@@ -311,5 +311,5 @@ void free_unvmfs_inode(struct unvmfs_inode *node)
     
     pthread_mutex_unlock(&alloc_list->mutex);
 
-    UNVMFS_DEBUG("free_unvmfs_inode success");
+    //UNVMFS_DEBUG("free_unvmfs_inode success");
 }
