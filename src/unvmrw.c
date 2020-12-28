@@ -141,7 +141,7 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
-        UNVMFS_LOG("read, no such inode");
+        UNVMFS_LOG("read, no such inode, fd=%d", fd);
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
@@ -181,7 +181,7 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
-        UNVMFS_LOG("write, no such inode");
+        UNVMFS_LOG("write, no such inode, fd=%d", fd);
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);

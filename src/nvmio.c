@@ -63,10 +63,10 @@ void init_env(void)
 	}
     UNVMFS_DEBUG("mmap g_unvmfs_file success");
 
-    g_cpu_nums = get_cpu_nums();
+    /*g_cpu_nums = get_cpu_nums();
     if (__glibc_unlikely(g_cpu_nums <= 0)) {
 		  handle_error("g_cpu_nums is NULL.");
-	}
+	}*/
     UNVMFS_DEBUG("get g_cpu_nums success");
     
 	init_num = g_nvm_base_addr;

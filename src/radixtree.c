@@ -46,12 +46,12 @@ u64 get_radixtree_node(radixtree_t *root, u64 index, radixtree_type_t type)
     node = nvm_off2addr(root->root);
     for (i = 1; i < RADIXTREE_LEVEL; ++i) {
         id = idx & RADIXTREE_IDX_MASK;
-        idx >>= PER_NODE_SHIFT;
         if (node->entries[id] == OFFSET_NULL) {
             UNVMFS_DEBUG("get_radixtree_node success offset null");
             return OFFSET_NULL;
         }
         node = nvm_off2addr(node->entries[id]);
+        idx >>= PER_NODE_SHIFT;
     }
 
     id = idx & RADIXTREE_IDX_MASK;
@@ -83,7 +83,6 @@ void set_radixtree_node(radixtree_t *root, u64 value, u64 index, radixtree_type_
     node = nvm_off2addr(root->root);
     for (i = 1; i < RADIXTREE_LEVEL; ++i) {
         id = idx & RADIXTREE_IDX_MASK;
-        idx >>= PER_NODE_SHIFT;
         /*new_node = alloc_radixtree_node();
         if (!__sync_bool_compare_and_swap(&node->entries[id], OFFSET_NULL, new_node)) {
             free_radixtree_node(nvm_off2addr(new_node));
@@ -92,6 +91,7 @@ void set_radixtree_node(radixtree_t *root, u64 value, u64 index, radixtree_type_
             node->entries[id] = alloc_radixtree_node();
         }
         node = nvm_off2addr(node->entries[id]);
+        idx >>= PER_NODE_SHIFT;
     }
     
     id = idx & RADIXTREE_IDX_MASK;

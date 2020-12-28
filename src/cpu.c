@@ -7,7 +7,8 @@
 #define MIN_CPU_COUNT 0ULL
 #define MAX_CPU_COUNT 0xffffffffffffffffULL
 
-int g_cpu_nums = 0;
+//int g_cpu_nums = 0;
+int g_cpu_nums = 64;
 
 /*inline int get_cpuid(void)
 {

@@ -4,7 +4,7 @@
 #include "types.h"
 
 #define PER_NODE_SHIFT 8
-#define PTRS_PER_NODE (1UL << PER_NODE_SHIFT)       /* 256 */
+#define PTRS_PER_NODE (1ULL << PER_NODE_SHIFT)       /* 256 */
 
 typedef enum rdixtree_type_enum {
   RADIXTREE_INODE,
