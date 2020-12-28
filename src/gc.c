@@ -137,7 +137,7 @@ void start_gc_task(void)
     
     sb = get_superblock();
 
-    pthread_rwlock_wrlock(&sb->rwlockp);
+    while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
     if (list_empty(&sb->s_list)) {
         pthread_rwlock_unlock(&sb->rwlockp);
         return;
@@ -148,7 +148,7 @@ void start_gc_task(void)
     list_add(entry, &sb->s_list);
     pthread_rwlock_unlock(&sb->rwlockp);
     
-    pthread_rwlock_wrlock(&inode->rwlockp);
+    while (pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
     page_head = inode->log_head;
     free_space_off = nvm_addr2off(get_free_space_base_addr());
     page_tail = free_space_off + (inode->log_tail - free_space_off) 

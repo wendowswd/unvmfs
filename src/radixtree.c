@@ -47,6 +47,7 @@ u64 get_radixtree_node(radixtree_t *root, u64 index, radixtree_type_t type)
         id = idx & RADIXTREE_IDX_MASK;
         idx >>= PER_NODE_SHIFT;
         if (node->entries[id] == OFFSET_NULL) {
+            UNVMFS_DEBUG("get_radixtree_node success offset null");
             return OFFSET_NULL;
         }
         node = nvm_off2addr(node->entries[id]);
