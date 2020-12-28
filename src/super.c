@@ -24,7 +24,8 @@ void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path)
     addr->cpu_nums = g_cpu_nums;
 
     INIT_LIST_HEAD(&addr->s_list);
-    pthread_rwlock_init(&addr->rwlockp, NULL);
+    //pthread_rwlock_init(&addr->rwlockp, NULL);
+    pthread_mutex_init(&addr->mutex, NULL);
     memcpy(addr->s_volume_name, unvmfs_path, strlen(unvmfs_path));
     init_radixtree_root(&addr->hash_root, RADIXTREE_INODE);
 

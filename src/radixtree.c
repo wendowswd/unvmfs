@@ -21,7 +21,8 @@ void init_radixtree_node(radixtree_node_t *node)
     node->count = 0;
     node->index = 0;
     memset(node->entries, 0xff, sizeof(node->entries));
-    pthread_rwlock_init(&node->rwlockp, NULL);
+    //pthread_rwlock_init(&node->rwlockp, NULL);
+    pthread_mutex_init(&node->mutex, NULL);
 }
 
 u64 get_radixtree_node(radixtree_t *root, u64 index, radixtree_type_t type)

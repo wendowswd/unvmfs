@@ -27,7 +27,8 @@ void init_unvmfs_inode(struct unvmfs_inode *inode_node)
     //inode_node->nvm_base_addr = OFFSET_NULL;
 
     init_radixtree_root(&inode_node->radix_tree, RADIXTREE_PAGE);
-    pthread_rwlock_init(&inode_node->rwlockp, NULL);
+    //pthread_rwlock_init(&inode_node->rwlockp, NULL);
+    pthread_mutex_init(&inode_node->mutex, NULL);
 
     UNVMFS_DEBUG("init_unvmfs_inode success");
 }

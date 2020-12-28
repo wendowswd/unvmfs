@@ -137,18 +137,22 @@ void start_gc_task(void)
     
     sb = get_superblock();
 
-    while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
+    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
+    pthread_mutex_lock(&sb->mutex);
     if (list_empty(&sb->s_list)) {
-        pthread_rwlock_unlock(&sb->rwlockp);
+       // pthread_rwlock_unlock(&sb->rwlockp);
+       pthread_mutex_unlock(&sb->mutex);
         return;
     }
     entry = sb->s_list.prev;
     inode = list_entry(entry, struct unvmfs_inode, l_node);
     list_del(entry);
     list_add(entry, &sb->s_list);
-    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_rwlock_unlock(&sb->rwlockp);
+    pthread_mutex_unlock(&sb->mutex);
     
-    while (pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
+    //while (pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
+    pthread_mutex_lock(&inode->mutex);
     page_head = inode->log_head;
     free_space_off = nvm_addr2off(get_free_space_base_addr());
     page_tail = free_space_off + (inode->log_tail - free_space_off) 
@@ -173,7 +177,8 @@ void start_gc_task(void)
         }
     }
     
-    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_rwlock_unlock(&inode->rwlockp);
+    pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("start_gc_task success");
 }
