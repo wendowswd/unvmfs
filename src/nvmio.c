@@ -37,6 +37,7 @@ void init_env(void)
 	int fd, s;
 	char filename[256];
 	unsigned long long *init_num = NULL;
+    struct stat statbuf;
 	
 	//g_unvmfs_path = getenv("UVNMFS_PATH");
 	g_unvmfs_path = "/home/wenduo/unvmfs";
@@ -51,12 +52,16 @@ void init_env(void)
 		handle_error("open g_unvmfs_path failed.");
 	}
     UNVMFS_DEBUG("open g_unvmfs_file success");
-	s = posix_fallocate(fd, 0, NVM_MMAP_SIZE);
-    if (__glibc_unlikely(s != 0)) {
-      handle_error("fallocate");
+    if (fstat(fd, &statbuf) != 0) {
+        handle_error("get file stat failed.");
     }
-    UNVMFS_DEBUG("fallocate g_unvmfs_file success");
-    
+    if (statbuf.st_size < NVM_MMAP_SIZE) {
+    	s = posix_fallocate(fd, 0, NVM_MMAP_SIZE);
+        if (__glibc_unlikely(s != 0)) {
+          handle_error("fallocate");
+        }
+        UNVMFS_DEBUG("fallocate g_unvmfs_file success");
+    }
 	g_nvm_base_addr = mmap(NULL, NVM_MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
 	if (__glibc_unlikely(g_nvm_base_addr == NULL)) {
 		  handle_error("g_nvm_base_addr is NULL.");
