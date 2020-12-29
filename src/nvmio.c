@@ -358,7 +358,7 @@ ssize_t nvmio_write(struct unvmfs_inode *inode, const void *buf, size_t cnt, u64
             page_addr_node = get_nvm_page2node_addr(page_addr);
             page_addr_node->log_entry = entry_off;
             memcpy(page_addr + offset, user_buf, first_page_wr);
-            user_buf += (PAGE_SIZE - offset);
+            user_buf += first_page_wr;
             if (page_addr_node->next_offset != OFFSET_NULL)
                 page_addr = nvm_off2addr(page_addr_node->next_offset);
         }
