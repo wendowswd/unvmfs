@@ -143,7 +143,7 @@ void start_gc_task(void)
        pthread_mutex_unlock(&sb->mutex);
         return;
     }
-    entry = sb->s_list.prev;
+    entry = nvm_off2addr(sb->s_list.prev);
     inode = list_entry(entry, struct unvmfs_inode, l_node);
     //pthread_rwlock_unlock(&sb->rwlockp);
     pthread_mutex_unlock(&sb->mutex);
