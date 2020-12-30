@@ -127,11 +127,14 @@ void free_pages(list_node_t *node, u32 page_num)
     }
 
     pthread_mutex_lock(&page_list->mutex);
-    head = get_nvm_page_node_addr(page_list->head);
-    next = head->next_offset;
-    head->next_offset = nvm_addr2off((char *)node - PAGE_SIZE);
-    tail->next_offset = next;
-
+    if (page_list->head == OFFSET_NULL) {
+        page_list->head = nvm_addr2off((char *)node - PAGE_SIZE);
+    } else {
+        head = get_nvm_page_node_addr(page_list->head);
+        next = head->next_offset;
+        head->next_offset = nvm_addr2off((char *)node - PAGE_SIZE);
+        tail->next_offset = next;
+    }
     pthread_mutex_unlock(&page_list->mutex);
 
     //UNVMFS_DEBUG("free_pages success");

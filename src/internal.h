@@ -52,7 +52,7 @@
 #define RADIXTREE_LEVEL 4
 #define RADIXTREE_IDX_MASK (PTRS_PER_NODE - 1)
 
-#define RADIXTREE_NODE_PER_ALLOC 1
+#define RADIXTREE_NODE_PER_ALLOC 128
 #define RADIXTREE_NODE_PER_PAGE (PAGE_SIZE / sizeof(radixtree_node_t))
 /* radixtree */
 
