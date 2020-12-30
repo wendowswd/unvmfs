@@ -49,6 +49,11 @@ void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
     //UNVMFS_DEBUG("fill_local_page_list start");
     
     pthread_mutex_lock(&global_page_list->mutex);
+
+    if (global_page_list->count < page_cnt) {
+        handle_error("global page list not enough");
+    }
+    
     node = get_nvm_page_node_addr(global_page_list->head);
     node_head = node;
     
@@ -62,9 +67,13 @@ void fill_local_page_list(pagelist_t *local_page_list, int page_cnt)
         local_page_list->head = node_head->offset;
     } else {
         head = get_nvm_page_node_addr(local_page_list->head);
-        next = get_nvm_page_node_addr(head->next_offset);
-        head->next_offset = node_head->offset;
-        node->next_offset = next->offset;
+        if (head->next_offset == OFFSET_NULL) {
+            head->next_offset = node_head->offset;
+        } else {
+            next = get_nvm_page_node_addr(head->next_offset);
+            head->next_offset = node_head->offset;
+            node->next_offset = next->offset;
+        }
     }
 
     global_page_list->count += -page_cnt;
