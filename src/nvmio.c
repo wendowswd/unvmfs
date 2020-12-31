@@ -40,7 +40,7 @@ void init_env(void)
     struct stat statbuf;
 	
 	//g_unvmfs_path = getenv("UVNMFS_PATH");
-	g_unvmfs_path = "/home/wenduo/unvmfs";
+	g_unvmfs_path = "/mnt/pmem0_wenduo";
 	if (__glibc_unlikely(g_unvmfs_path == NULL)) {
 	  handle_error("g_unvmfs_path is NULL.");
 	}
