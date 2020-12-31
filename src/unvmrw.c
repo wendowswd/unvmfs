@@ -125,12 +125,6 @@ int unvmopen(const char *path, int flags, ...) {
     return fd;
 }
 
-int unvmclose(int fd)
-{
-    // todo
-    return 0;
-}
-
 ssize_t unvmread(int fd, void *buf, size_t cnt)
 {
     struct unvmfs_super_block *sb = get_superblock();
@@ -262,6 +256,13 @@ off_t unvmlseek(int fd, off_t offset, int whence)
 
     return off;
 }
+
+int unvmclose(int fd)
+{
+    unvmlseek(fd, 0, SEEK_SET);
+    return 0;
+}
+
 
 int unvmftruncate(int fd, off_t length)
 {
