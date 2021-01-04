@@ -18,8 +18,8 @@ typedef struct radixtree_node_struct {
   int count;
   int index;
   u64 entries[PTRS_PER_NODE];
-  //pthread_rwlock_t rwlockp;
-  pthread_mutex_t mutex;
+  pthread_rwlock_t rwlockp;
+  //pthread_mutex_t mutex;
 } radixtree_node_t;
 
 

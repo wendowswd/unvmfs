@@ -44,11 +44,11 @@ int unvmcreat(const char *filename, mode_t mode) {
 
     sb = get_superblock();
     fd = hashmap_hash_s32(filename);
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset != OFFSET_NULL) {
         UNVMFS_LOG("creat, inode exist");
         return EEXIST;
@@ -61,17 +61,19 @@ int unvmcreat(const char *filename, mode_t mode) {
     }
 
     inode = nvm_off2addr(inode_offset);
-    
-    pthread_mutex_lock(&inode->mutex);
+
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
     inode->fd = fd;
 
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     set_radixtree_node(&sb->hash_root, inode_offset, fd, RADIXTREE_INODE);
     list_add(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmcreat success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
     return fd;
@@ -91,11 +93,11 @@ int unvmopen(const char *path, int flags, ...) {
 
     sb = get_superblock();
     fd = hashmap_hash_s32(path);
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         if (!(flags & O_CREAT)) {
             UNVMFS_LOG("open, inode not exist and !O_CREAT");
@@ -110,15 +112,17 @@ int unvmopen(const char *path, int flags, ...) {
 
     inode = nvm_off2addr(inode_offset);
     if (flags & O_CREAT) {
-        pthread_mutex_lock(&inode->mutex);
+        pthread_rwlock_wrlock(&inode->rwlockp);
+        //pthread_mutex_lock(&inode->mutex);
         inode->fd = fd;
-        //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-        pthread_mutex_lock(&sb->mutex);
+        pthread_rwlock_wrlock(&sb->rwlockp);
+        //pthread_mutex_lock(&sb->mutex);
         set_radixtree_node(&sb->hash_root, inode_offset, fd, RADIXTREE_INODE);
         list_add(&inode->l_node, &sb->s_list);
-        //pthread_rwlock_unlock(&sb->rwlockp);
-        pthread_mutex_unlock(&sb->mutex);
-        pthread_mutex_unlock(&inode->mutex);
+        pthread_rwlock_unlock(&sb->rwlockp);
+        //pthread_mutex_unlock(&sb->mutex);
+        //pthread_mutex_unlock(&inode->mutex);
+        pthread_rwlock_unlock(&inode->rwlockp);
     }
     UNVMFS_DEBUG("unvmopen success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
 
@@ -134,11 +138,11 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
 
     UNVMFS_DEBUG("start，sb=%p", sb);
 
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("read, no such inode, fd=%d", fd);
         return INODE_FAILED;
@@ -147,19 +151,19 @@ ssize_t unvmread(int fd, void *buf, size_t cnt)
 
     ++g_read_times_cnt;
 
-    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    pthread_rwlock_rdlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
 
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     
     ret = nvmio_read(inode, buf, cnt, inode->file_off);
     update_inode_offset(inode, cnt);
-    //pthread_rwlock_unlock(&inode->rwlockp);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmread success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
     
@@ -175,11 +179,11 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
 
     UNVMFS_DEBUG("start，sb=%p", sb);
 
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("write, no such inode, fd=%d", fd);
         return INODE_FAILED;
@@ -188,19 +192,19 @@ ssize_t unvmwrite(int fd, const void *buf, size_t cnt)
 
     ++g_write_times_cnt;
 
-    //while (pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
 
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     
     ret = nvmio_write(inode, buf, cnt, inode->file_off);
     update_inode_info(inode, cnt);
-    //pthread_rwlock_unlock(&inode->rwlockp);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmwrite success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
 
@@ -216,19 +220,19 @@ off_t unvmlseek(int fd, off_t offset, int whence)
 
     UNVMFS_DEBUG("start，sb=%p", sb);
 
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("lseek, no such inode");
         return INODE_FAILED;
     }
     inode = nvm_off2addr(inode_offset);
 
-    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
     switch (whence) {
         case SEEK_SET:
             inode->file_off = offset;
@@ -241,15 +245,15 @@ off_t unvmlseek(int fd, off_t offset, int whence)
             inode->file_off += offset;
             break;
         default:
-            //pthread_rwlock_unlock(&inode->rwlockp);
-            pthread_mutex_unlock(&inode->mutex);
+            pthread_rwlock_unlock(&inode->rwlockp);
+            //pthread_mutex_unlock(&inode->mutex);
             // SEEK_DATA, SEEK_HOLE if needed
             return EINVAL;
     }
 
     off = inode->file_off;
-    //pthread_rwlock_unlock(&inode->rwlockp);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmlseek success, sb=%p, inode=%p, fd=%d", sb, inode, (int)inode->fd);
 
@@ -285,11 +289,11 @@ ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
 
     UNVMFS_DEBUG("start");
 
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("read, no such inode");
         return INODE_FAILED;
@@ -298,19 +302,19 @@ ssize_t unvmpread(int fd, void *buf, size_t cnt, off_t offset)
 
     ++g_read_times_cnt;
 
-    //while (pthread_rwlock_tryrdlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    pthread_rwlock_rdlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
 
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     
     ret = nvmio_read(inode, buf, cnt, offset);
     //update_inode_offset(inode, cnt);
-    //pthread_rwlock_unlock(&inode->rwlockp);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmpread success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
     
@@ -332,11 +336,11 @@ ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
 
     UNVMFS_DEBUG("start");
 
-    //while (pthread_rwlock_tryrdlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_rdlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     inode_offset = get_radixtree_node(&sb->hash_root, fd, RADIXTREE_INODE);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     if (inode_offset == OFFSET_NULL) {
         UNVMFS_LOG("write, no such inode");
         return INODE_FAILED;
@@ -345,19 +349,19 @@ ssize_t unvmpwrite(int fd, const void *buf, size_t cnt, off_t offset)
 
     ++g_write_times_cnt;
 
-    //while(pthread_rwlock_trywrlock(&inode->rwlockp) != 0);
-    pthread_mutex_lock(&inode->mutex);
+    pthread_rwlock_wrlock(&inode->rwlockp);
+    //pthread_mutex_lock(&inode->mutex);
 
-    //while (pthread_rwlock_trywrlock(&sb->rwlockp) != 0);
-    pthread_mutex_lock(&sb->mutex);
+    pthread_rwlock_wrlock(&sb->rwlockp);
+    //pthread_mutex_lock(&sb->mutex);
     list_move(&inode->l_node, &sb->s_list);
-    //pthread_rwlock_unlock(&sb->rwlockp);
-    pthread_mutex_unlock(&sb->mutex);
+    pthread_rwlock_unlock(&sb->rwlockp);
+    //pthread_mutex_unlock(&sb->mutex);
     
     ret = nvmio_write(inode, buf, cnt, offset);
     update_inode_size(inode, cnt);
-    //pthread_rwlock_unlock(&inode->rwlockp);
-    pthread_mutex_unlock(&inode->mutex);
+    pthread_rwlock_unlock(&inode->rwlockp);
+    //pthread_mutex_unlock(&inode->mutex);
 
     UNVMFS_DEBUG("unvmpwrite success, sb=%p, inode=%p, fd=%d, inode->fd=%d", sb, inode, fd, (int)inode->fd);
 

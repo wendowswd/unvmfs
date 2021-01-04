@@ -31,8 +31,8 @@ struct unvmfs_super_block {
     struct list_head    s_list;         /* inode list */
 	u32                 cpu_nums;       /* cpu nums */
 
-    //pthread_rwlock_t rwlockp;
-    pthread_mutex_t mutex;
+    pthread_rwlock_t rwlockp;
+    //pthread_mutex_t mutex;
 };
 
 void kernel_superblock_init(struct unvmfs_super_block *addr, char *unvmfs_path);

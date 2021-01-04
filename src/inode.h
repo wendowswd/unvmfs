@@ -36,8 +36,8 @@ struct unvmfs_inode {
     radixtree_t radix_tree;			/* radix tree (for fast lookup pages) */
     struct list_head l_node;        /* inode list */
     //struct rb_root rb_tree;         /* 
-    //pthread_rwlock_t rwlockp;
-    pthread_mutex_t mutex;
+    pthread_rwlock_t rwlockp;
+    //pthread_mutex_t mutex;
 };
 
 void init_unvmfs_inode(struct unvmfs_inode *inode_node);
