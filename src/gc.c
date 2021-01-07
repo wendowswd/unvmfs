@@ -200,7 +200,7 @@ void *gc_task_thread(void *args)
     g_list = get_free_space_base_addr();
 
     while (1) {
-        sleep(3);
+        sleep(5);
         access_times = g_write_times_cnt + g_read_times_cnt;
         write_times = g_write_times_cnt;
         read_times = g_read_times_cnt;

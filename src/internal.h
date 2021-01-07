@@ -34,8 +34,8 @@
 #define	RADIXTREE_START     24          // radix table
 #define FREE_SPACE_START    28          // free space
 
-#define NVM_MMAP_SIZE (1ULL << 37)       /* 128GB */
-//#define NVM_MMAP_SIZE (1ULL << 36)       /* 64GB */
+//#define NVM_MMAP_SIZE (1ULL << 37)       /* 128GB */
+#define NVM_MMAP_SIZE (1ULL << 36)       /* 64GB */
 //#define NVM_MMAP_SIZE (1ULL << 34)       /* 16GB */
 #define UNVMFS_PAGE_SIZE (PAGE_SIZE + sizeof(list_node_t))
 #define NVM_FREE_NUM_PAGES ((NVM_MMAP_SIZE - FREE_SPACE_START * PAGE_SIZE) / (UNVMFS_PAGE_SIZE))
@@ -45,7 +45,7 @@
 
 /* page list */
 #define FILL_LOCAL_PAGE_LIST_MIN 2
-#define FILL_LOCAL_PAGE_LIST_MAX 512
+#define FILL_LOCAL_PAGE_LIST_MAX 5120
 
 /* page list */
 
@@ -71,7 +71,7 @@
 /* hashmap */
 
 /* write log */
-#define MAX_NUM_PAGE_PER_ENTRY 64
+#define MAX_NUM_PAGE_PER_ENTRY 256
 #define WRITE_LOG_PERALLOC 1  // only 1 is ok
 /* write log */
 
