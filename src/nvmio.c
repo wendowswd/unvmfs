@@ -443,8 +443,8 @@ ssize_t nvmio_read(struct unvmfs_inode *inode, void *buf, size_t cnt, u64 file_o
 
     //file_off = inode->file_off;
     if (file_off + cnt > inode->i_size) {
-        UNVMFS_LOG("nvmio_read oversize. file_off=%llu, file_size=%llu, cnt=%llu", file_off, inode->i_size, cnt);
-        return -1;
+        //UNVMFS_LOG("nvmio_read oversize. file_off=%llu, file_size=%llu, cnt=%llu", file_off, inode->i_size, cnt);
+        return 0;
     }
     
     offset = file_off & (~PAGE_MASK);
