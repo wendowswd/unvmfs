@@ -16,6 +16,8 @@
 	} while (0)
 
 #define FILE_PATH "/mnt/pmem0_wenduo/testfile"
+#define MAP_FILE_PATH "/mnt/pmem0_wenduo/map_testfile"
+
 #define FILE_SIZE (1UL << 30)
 #define BUF_SIZE (1UL << 12)
 #define NSECS_PER_SEC 100000000
@@ -31,15 +33,11 @@ int main(void) {
     struct timespec end_time;
     unsigned long long cnt;
 
+    // write;
     fd = open(FILE_PATH, O_CREAT | O_RDWR);
-    if (fd == -1) {
-        handle_error("open");
-    }
-    s = posix_fallocate(fd, 0, FILE_SIZE);
-    if (__glibc_unlikely(s != 0)) {
-      handle_error("fallocate");
-    }
-
+	if (fd == -1) {
+		handle_error("open");
+	}
     memset(write_buf, 'a', BUF_SIZE);
     clock_gettime(CLOCK_REALTIME, &start_time);
     for (i = 0; i < FILE_SIZE; i += BUF_SIZE) {
@@ -48,9 +46,16 @@ int main(void) {
     clock_gettime(CLOCK_REALTIME, &end_time);
     cnt = (end_time.tv_sec - start_time.tv_sec) * NSECS_PER_SEC + (end_time.tv_nsec - start_time.tv_nsec);
     printf("write latency:  %llu  ns\n", cnt);
+    s = close(fd);
+    if (s != 0) {
+        handle_error("close");
+    }
 
-    lseek(fd, 0, SEEK_SET);
-
+    // read
+    fd = open(FILE_PATH, O_RDWR);
+    if (fd == -1) {
+        handle_error("open");
+    }
     clock_gettime(CLOCK_REALTIME, &start_time);
     for (i = 0; i < FILE_SIZE; i += BUF_SIZE) {
         read(fd, read_buf, BUF_SIZE);
@@ -58,12 +63,24 @@ int main(void) {
     clock_gettime(CLOCK_REALTIME, &end_time);
     cnt = (end_time.tv_sec - start_time.tv_sec) * NSECS_PER_SEC + (end_time.tv_nsec - start_time.tv_nsec);
     printf("read latency:  %llu  ns\n", cnt);
+    s = close(fd);
+    if (s != 0) {
+        handle_error("close");
+    }
 
+    // mmap write
+    fd = open(MAP_FILE_PATH, O_CREAT | O_RDWR);
+	if (fd == -1) {
+		handle_error("open");
+	}
+    s = posix_fallocate(fd, 0, FILE_SIZE);
+    if (__glibc_unlikely(s != 0)) {
+      handle_error("fallocate");
+    }
     addr = (char *)mmap(NULL, FILE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
     if (__glibc_unlikely(addr == NULL)) {
         handle_error("mmap");
      }
-
     clock_gettime(CLOCK_REALTIME, &start_time);
     for (i = 0; i < FILE_SIZE; i += BUF_SIZE) {
         memcpy(addr + i, write_buf, BUF_SIZE);
@@ -72,6 +89,21 @@ int main(void) {
     cnt = (end_time.tv_sec - start_time.tv_sec) * NSECS_PER_SEC + (end_time.tv_nsec - start_time.tv_nsec);
     printf("mmap write latency:  %llu  ns\n", cnt);
 
+    munmap(addr, FILE_SIZE);
+    s = close(fd);
+    if (s != 0) {
+        handle_error("close");
+    }
+
+    // mmap read
+    fd = open(MAP_FILE_PATH, O_RDWR);
+	if (fd == -1) {
+		handle_error("open");
+	}
+    addr = (char *)mmap(NULL, FILE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
+    if (__glibc_unlikely(addr == NULL)) {
+        handle_error("mmap");
+     }
     clock_gettime(CLOCK_REALTIME, &start_time);
     for (i = 0; i < FILE_SIZE; i += BUF_SIZE) {
         memcpy(read_buf, addr + i, BUF_SIZE);
@@ -80,6 +112,7 @@ int main(void) {
     cnt = (end_time.tv_sec - start_time.tv_sec) * NSECS_PER_SEC + (end_time.tv_nsec - start_time.tv_nsec);
     printf("mmap read latency:  %llu  ns\n", cnt);
     
+    munmap(addr, FILE_SIZE);
     s = close(fd);
     if (s != 0) {
         handle_error("close");
